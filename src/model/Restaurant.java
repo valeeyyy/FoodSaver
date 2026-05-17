@@ -8,24 +8,24 @@ import java.util.List;
 
 public class Restaurant extends User {
 
-    private String             name;
-    private String             ownerName;
-    private double             lat;
-    private double             lon;
-    private String             foodCategory;
+    private String name;
+    private String ownerName;
+    private double lat;
+    private double lon;
+    private String foodCategory;
     private List<FoodDonation> donations;
 
     public Restaurant(String name, String ownerName,
-                      String username, String password,
-                      String phone, String address,
-                      double lat, double lon, String foodCategory) {
+            String username, String password,
+            String phone, String address,
+            double lat, double lon, String foodCategory) {
         super(username, password, phone, address);
-        this.name         = name;
-        this.ownerName    = ownerName;
-        this.lat          = lat;
-        this.lon          = lon;
+        this.name = name;
+        this.ownerName = ownerName;
+        this.lat = lat;
+        this.lon = lon;
         this.foodCategory = foodCategory;
-        this.donations    = new ArrayList<>();
+        this.donations = new ArrayList<>();
     }
 
     public void postDonation(FoodDonation d) {
@@ -71,12 +71,29 @@ public class Restaurant extends User {
         return donations;
     }
 
-    public String getName()         { return name; }
-    public String getOwnerName()    { return ownerName; }
-    public double getLat()          { return lat; }
-    public double getLon()          { return lon; }
-    public String getFoodCategory() { return foodCategory; }
-    public List<FoodDonation> getDonations() { return donations; }
+    public String getName() {
+        return name;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public double getLon() {
+        return lon;
+    }
+
+    public String getFoodCategory() {
+        return foodCategory;
+    }
+
+    public List<FoodDonation> getDonations() {
+        return donations;
+    }
 
     @Override
     public String toString() {

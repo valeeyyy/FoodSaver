@@ -6,15 +6,15 @@ import java.time.format.DateTimeFormatter;
 public class IdGenerator {
 
     private static int donationCounter = 0;
-    private static int orderCounter    = 0;
-    private static int bundleCounter   = 0;
-    private static int userCounter     = 0;
-    private static int entryCounter    = 0;
+    private static int orderCounter = 0;
+    private static int bundleCounter = 0;
+    private static int userCounter = 0;
+    private static int entryCounter = 0;
 
-    private static final DateTimeFormatter FMT =
-            DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    private IdGenerator() {}
+    private IdGenerator() {
+    }
 
     public static String nextDonationId() {
         return String.format("DON-%s-%03d",

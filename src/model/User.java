@@ -7,22 +7,22 @@ import java.time.LocalDateTime;
 
 public abstract class User {
 
-    protected String        userId;
-    protected String        username;
-    protected String        password;
-    protected String        phone;
-    protected String        address;
+    protected String userId;
+    protected String username;
+    protected String password;
+    protected String phone;
+    protected String address;
     protected AccountStatus accountStatus;
     protected LocalDateTime registeredAt;
 
     public User(String username, String password, String phone, String address) {
-        this.userId        = IdGenerator.nextUserId(getClass().getSimpleName().toUpperCase().substring(0, 3));
-        this.username      = username;
-        this.password      = password;
-        this.phone         = phone;
-        this.address       = address;
+        this.userId = IdGenerator.nextUserId(getClass().getSimpleName().toUpperCase().substring(0, 3));
+        this.username = username;
+        this.password = password;
+        this.phone = phone;
+        this.address = address;
         this.accountStatus = AccountStatus.PENDING;
-        this.registeredAt  = LocalDateTime.now();
+        this.registeredAt = LocalDateTime.now();
     }
 
     public boolean login(String inputUsername, String inputPassword) {
@@ -41,14 +41,47 @@ public abstract class User {
         System.out.println("[✓] Logout berhasil. Sampai jumpa, " + username + "!");
     }
 
-    public AccountStatus getAccountStatus() { return accountStatus; }
+    public String getUserId() {
+        return userId;
+    }
 
-    public String        getUserId()      { return userId; }
-    public String        getUsername()    { return username; }
-    public String        getPassword()    { return password; }
-    public String        getPhone()       { return phone; }
-    public String        getAddress()     { return address; }
-    public LocalDateTime getRegisteredAt(){ return registeredAt; }
+    public String getUsername() {
+        return username;
+    }
 
-    public void setAccountStatus(AccountStatus status) { this.accountStatus = status; }
+    public String getPassword() {
+        return password;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public AccountStatus getAccountStatus() {
+        return accountStatus;
+    }
+
+    public LocalDateTime getRegisteredAt() {
+        return registeredAt;
+    }
+
+    public void setAccountStatus(AccountStatus status) {
+        this.accountStatus = status;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

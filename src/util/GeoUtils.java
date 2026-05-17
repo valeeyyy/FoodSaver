@@ -8,17 +8,19 @@ import java.util.List;
 
 public class GeoUtils {
 
-    private GeoUtils() {}
+    private GeoUtils() {
+    }
 
     public static double euclideanKm(double lat1, double lon1,
-                                      double lat2, double lon2) {
+            double lat2, double lon2) {
         double dLat = (lat2 - lat1) * 111.0;
         double dLon = (lon2 - lon1) * 111.0 * Math.cos(Math.toRadians(lat1));
         return Math.sqrt(dLat * dLat + dLon * dLon);
     }
 
     public static long estimateArrivalMs(List<Restaurant> pickups, Shelter shelter) {
-        if (pickups == null || pickups.isEmpty()) return 0;
+        if (pickups == null || pickups.isEmpty())
+            return 0;
 
         double totalKm = 0.0;
         for (int i = 0; i < pickups.size() - 1; i++) {
@@ -46,7 +48,8 @@ public class GeoUtils {
     }
 
     public static double getTotalRouteKm(List<Restaurant> pickups, Shelter shelter) {
-        if (pickups == null || pickups.isEmpty()) return 0.0;
+        if (pickups == null || pickups.isEmpty())
+            return 0.0;
         double totalKm = 0.0;
         for (int i = 0; i < pickups.size() - 1; i++) {
             Restaurant a = pickups.get(i);
