@@ -75,7 +75,7 @@ public class Menu {
         switch (choice) {
             case "1" -> registerRestaurant();
             case "2" -> registerShelter();
-            case "0" -> {return;}
+            case "0" -> System.exit(0);
             default  -> System.out.println("[!] Pilihan tidak valid.\n");
         }
     }
