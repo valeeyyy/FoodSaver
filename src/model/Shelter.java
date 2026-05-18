@@ -2,9 +2,6 @@ package model;
 
 import enums.ShelterType;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Shelter extends User {
 
     private String name;
