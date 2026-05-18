@@ -19,23 +19,13 @@ public class GeoUtils {
     }
 
     public static long estimateArrivalMs(List<Restaurant> pickups, Shelter shelter) {
-        if (pickups == null || pickups.isEmpty())
-            return 0;
-
-        double totalKm = 0.0;
-        for (int i = 0; i < pickups.size() - 1; i++) {
-            Restaurant a = pickups.get(i);
-            Restaurant b = pickups.get(i + 1);
-            totalKm += euclideanKm(a.getLat(), a.getLon(), b.getLat(), b.getLon());
-        }
-        Restaurant last = pickups.get(pickups.size() - 1);
-        totalKm += euclideanKm(last.getLat(), last.getLon(), shelter.getLat(), shelter.getLon());
+        double totalKm = getTotalRouteKm(pickups, shelter);
 
         double travelMinutes = (totalKm / SystemConfig.COURIER_SPEED_KMH) * 60.0;
         double loadingMinutes = (double) pickups.size() * SystemConfig.LOADING_TIME_MINUTES;
 
         double totalMinutes = travelMinutes + loadingMinutes;
-        return (long) (totalMinutes * 60 * 1000); // convert to ms
+        return (long) (totalMinutes * 60 * 1000); 
     }
 
     public static boolean isSafeToDeliver(FoodDonation d, long arrivalMs) {
