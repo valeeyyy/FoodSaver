@@ -84,4 +84,14 @@ public abstract class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    private boolean verified = false;
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
 }
