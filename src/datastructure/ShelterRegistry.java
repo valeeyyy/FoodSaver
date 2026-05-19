@@ -23,4 +23,8 @@ public class ShelterRegistry {
     public void remove(String id) { 
         map.remove(id); 
     }
+
+    public Collection<Shelter> getAll() {
+        return map.values();
+    }
 }
