@@ -2,9 +2,7 @@ package datastructure;
 
 import model.Shelter;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ShelterRegistry {
 

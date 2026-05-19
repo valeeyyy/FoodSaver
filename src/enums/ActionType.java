@@ -6,5 +6,7 @@ public enum ActionType {
     LOGIN,
     REGISTER,
     DELETE,
-    EDIT_PROFILE
+    EDIT_PROFILE,
+    YELLOW_ALERT,
+    RED_ALERT
 }
