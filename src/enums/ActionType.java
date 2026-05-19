@@ -8,5 +8,6 @@ public enum ActionType {
     DELETE,
     EDIT_PROFILE,
     YELLOW_ALERT,
-    RED_ALERT
+    RED_ALERT,
+    STARTUP_CLEANUP
 }

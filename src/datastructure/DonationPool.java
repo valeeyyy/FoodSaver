@@ -17,11 +17,14 @@ public class DonationPool {
     private AuditLog auditLog;
     private MatchingEngine engine;
 
-    public DonationPool(AuditLog auditLog, MatchingEngine engine) {
-        this.queue = new LinkedList<>();
+    public DonationPool(AuditLog auditLog) {
+        this.queue              = new LinkedList<>();
         this.yellowAlertMinutes = SystemConfig.YELLOW_ALERT_MINUTES;
-        this.redAlertMinutes = SystemConfig.FRESHNESS_BUFFER_MIN;
-        this.auditLog = auditLog;
+        this.redAlertMinutes    = SystemConfig.FRESHNESS_BUFFER_MIN;
+        this.auditLog           = auditLog;
+    }
+
+    public void setEngine(MatchingEngine engine) {
         this.engine = engine;
     }
 

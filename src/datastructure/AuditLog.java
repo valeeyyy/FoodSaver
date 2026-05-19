@@ -16,4 +16,12 @@ public class AuditLog {
     public void log(String actor, ActionType action, String targetId, String notes) {
         entries.addFirst(new AuditEntry(actor, action, targetId, notes));
     }
+
+    public List<AuditEntry> getAll() {
+        return new ArrayList<>(entries);
+    }
+
+    public int size() { 
+        return entries.size(); 
+    }
 }
