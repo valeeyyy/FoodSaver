@@ -49,11 +49,8 @@ public class MatchOption {
 
     @Override
     public String toString() {
-        return String.format(
-                "MatchOption{bundle=%s, shelter='%s', routeKm=%.2f, surplus=%d}",
-                bundle.getBundleId(),
-                shelter.getName(),
-                totalRouteKm,
-                portionSurplus);
+        return "MatchOption { " + "bundleId = " + bundle.getBundleId() + ", shelter = '" + shelter.getName() + 
+        "'" + ", routeKm = " + totalRouteKm + ", surplus = " + portionSurplus + " }";
     }
+
 }
