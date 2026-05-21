@@ -1,10 +1,10 @@
 package datastructure;
 
-import model.Shelter;
-
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import model.Shelter;
 
 public class ShelterRegistry {
 
@@ -24,5 +24,9 @@ public class ShelterRegistry {
 
     public void remove(String id) { 
         map.remove(id); 
+    }
+
+    public List<Shelter> getActiveShelters(){
+        return new ArrayList<>(map.values());
     }
 }
