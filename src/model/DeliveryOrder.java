@@ -1,14 +1,15 @@
 package model;
 
 import engine.MatchOption;
-import util.IdGenerator;
+import enums.OrderStatus;
 
 public class DeliveryOrder {
     private String orderId;
     private MatchOption matchOption;
     private String courierName;
     private long estimatedArrivalMs;
-
+    private OrderStatus status;
+    
     public DeliveryOrder(MatchOption matchOption) {
         this.orderId = "ORD-" + System.currentTimeMillis(); 
         this.matchOption = matchOption;
@@ -29,4 +30,9 @@ public class DeliveryOrder {
     public MatchOption getMatchOption() {
         return matchOption;
     }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
 }

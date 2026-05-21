@@ -1,10 +1,11 @@
 package model;
 
 import datastructure.AuditLog;
+import datastructure.DonationPool;
 import datastructure.ShelterRegistry;
 import enums.AccountStatus;
 import enums.ActionType;
-
+import enums.DonationStatus;
 import java.util.*;
 
 public class Admin extends User {
@@ -26,12 +27,12 @@ public class Admin extends User {
             case "APPROVED" -> {
                 user.setAccountStatus(AccountStatus.APPROVED);
                 System.out.println("[✓] Akun " + user.getUsername() + " disetujui.");
-                auditLog.log(username, ActionType.APPROVE, user.getUserId(), notes);
+                auditLog.logAction(username, ActionType.APPROVE, user.getUserId(), notes);
             }
             case "REJECTED" -> {
                 user.setAccountStatus(AccountStatus.REJECTED);
                 System.out.println("[✗] Akun " + user.getUsername() + " ditolak.");
-                auditLog.log(username, ActionType.REJECT, user.getUserId(), notes);
+                auditLog.logAction(username, ActionType.REJECT, user.getUserId(), notes);
             }
             default -> System.out.println("[!] Keputusan tidak valid. Gunakan APPROVED / REJECTED / SKIP.");
         }
@@ -73,9 +74,25 @@ public class Admin extends User {
             if (user instanceof Shelter s) {
                 registry.remove(s);
             }
-            auditLog.log(username, ActionType.DELETE, user.getUserId(), "Akun dihapus: " + user.getUsername());
+            auditLog.logAction(username, ActionType.DELETE, user.getUserId(), "Akun dihapus: " + user.getUsername());
             System.out.println("[✓] Akun " + user.getUsername() + " berhasil dihapus.");
         }
         return removed;
+    }
+
+    public Shelter searchShelterById(String id, ShelterRegistry registry) {
+        return registry.findById(id);
+    }
+
+    public List<FoodDonation> viewUnmatchedDonations(DonationPool pool) {
+        List<FoodDonation> unmatched = new ArrayList<>();
+        List<FoodDonation> allActive = pool.getAll();
+
+        for (FoodDonation d : allActive) {
+            if (d.getStatus() == DonationStatus.WAITING) {
+                unmatched.add(d);
+            }
+        }
+        return unmatched;
     }
 }
