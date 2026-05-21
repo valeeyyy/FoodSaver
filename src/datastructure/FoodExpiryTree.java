@@ -1,31 +1,28 @@
 package datastructure;
 
-import java.time.LocalDateTime;
-import java.util.*;
-
+import java.util.Comparator;
+import java.util.PriorityQueue;
 import model.FoodDonation;
 
 public class FoodExpiryTree {
-    private final TreeMap<LocalDateTime, List<FoodDonation>> tree;
+
+    private PriorityQueue<FoodDonation> expiryQueue;
 
     public FoodExpiryTree() {
-        this.tree = new TreeMap<>();
+
+        expiryQueue = new PriorityQueue<>(new Comparator<FoodDonation>() {
+            @Override
+            public int compare(FoodDonation d1, FoodDonation d2) {
+                return d1.getExpiredAt().compareTo(d2.getExpiredAt());
+            }
+        });
     }
 
-    public void remove(FoodDonation d) {
-        List<FoodDonation> bucket = tree.get(d.getExpiredAt());
-        if (bucket != null) {
-            bucket.remove(d);
-            if (bucket.isEmpty())
-                tree.remove(d.getExpiredAt());
-        }
+    public void addDonation(FoodDonation donation) {
+        expiryQueue.add(donation);
     }
 
-    public int size() {
-        return tree.values().stream().mapToInt(List::size).sum();
-    }
-
-    public boolean isEmpty() {
-        return size() == 0;
+    public FoodDonation getEarliestExpiringDonation() {
+        return expiryQueue.poll(); 
     }
 }

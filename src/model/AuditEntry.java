@@ -1,10 +1,10 @@
 package model;
 
 import enums.ActionType;
-import util.IdGenerator;
-
+import enums.AlertType;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import util.IdGenerator;
 
 public class AuditEntry {
 
@@ -13,15 +13,28 @@ public class AuditEntry {
     private final String entryId;
     private final LocalDateTime timestamp;
     private final String actor;
-    private final ActionType actionType;
+
+    private final Enum<?> eventType;
+
     private final String targetId;
     private final String notes;
 
+    // Constructor 1: Jika yang masuk adalah ActionType
     public AuditEntry(String actor, ActionType actionType, String targetId, String notes) {
         this.entryId = IdGenerator.nextEntryId();
         this.timestamp = LocalDateTime.now();
         this.actor = actor;
-        this.actionType = actionType;
+        this.eventType = actionType;
+        this.targetId = targetId;
+        this.notes = notes;
+    }
+
+    // Constructor 2: Jika yang masuk adalah AlertType
+    public AuditEntry(String actor, AlertType alertType, String targetId, String notes) {
+        this.entryId = IdGenerator.nextEntryId();
+        this.timestamp = LocalDateTime.now();
+        this.actor = actor;
+        this.eventType = alertType;
         this.targetId = targetId;
         this.notes = notes;
     }
@@ -42,8 +55,8 @@ public class AuditEntry {
         return actor;
     }
 
-    public ActionType getActionType() {
-        return actionType;
+    public Enum<?> getEventType() {
+        return eventType;
     }
 
     public String getTargetId() {
@@ -56,6 +69,10 @@ public class AuditEntry {
 
     @Override
     public String toString() {
-        return String.format("[%s] %s | %-15s | target=%-20s | %s", timestamp.format(FMT), actor, actionType, targetId, notes);
+        String typePrefix = (eventType instanceof AlertType) ? "ALERT: " : "ACTION: ";
+        String eventName = typePrefix + eventType.name();
+
+        return String.format("[%s] %s | %-18s | target=%-20s | %s",
+                timestamp.format(FMT), actor, eventName, targetId, notes);
     }
 }
