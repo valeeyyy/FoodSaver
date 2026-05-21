@@ -1,30 +1,36 @@
 package datastructure;
 
-import model.FoodDonation;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.util.*;
+import model.DeliveryOrder;
+import enums.OrderStatus;
 
 public class DeliveryHistory {
 
-    private final LinkedList<FoodDonation> history;
+    private ArrayList<DeliveryOrder> orderList;
 
     public DeliveryHistory() {
-        this.history = new LinkedList<>();
+        this.orderList = new ArrayList<>();
     }
 
-    public void addFirst(FoodDonation d) {
-        history.addFirst(d);
+    public void addOrder(DeliveryOrder order) {
+        orderList.add(order);
+        System.out.println("Order " + order.getOrderId() + " berhasil dicatat di History.");
     }
 
-    public List<FoodDonation> getAll() {
-        return new ArrayList<>(history);
+    public ArrayList<DeliveryOrder> getAllOrders() {
+        return orderList;
     }
 
-    public int size() { 
-        return history.size(); 
-    }
-    
-    public boolean isEmpty() { 
-        return history.isEmpty(); 
+    public List<DeliveryOrder> filterByStatus(OrderStatus status) {
+        List<DeliveryOrder> result = new ArrayList<>();
+
+        for (DeliveryOrder order : orderList) {
+            if (order.getStatus() == status) {
+                result.add(order);
+            }
+        }
+        return result;
     }
 }

@@ -1,8 +1,10 @@
 package datastructure;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import model.Shelter;
-
-import java.util.*;
 
 public class ShelterRegistry {
 
@@ -16,12 +18,20 @@ public class ShelterRegistry {
         map.put(s.getUserId(), s);
     }
 
-    public void remove(Shelter s) { 
-        map.remove(s.getUserId()); 
+    public void remove(Shelter s) {
+        map.remove(s.getUserId());
     }
 
-    public void remove(String id) { 
-        map.remove(id); 
+    public void remove(String id) {
+        map.remove(id);
+    }
+
+    public List<Shelter> getActiveShelters() {
+        return new ArrayList<>(map.values());
+    }
+
+    public Shelter findById(String id) {
+        return map.get(id);
     }
 
     public Collection<Shelter> getAll() {
