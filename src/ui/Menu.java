@@ -1,15 +1,14 @@
 package ui;
 
+import datastructure.AuditLog;
+import enums.ActionType;
+import enums.ShelterType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
-import enums.ActionType;
-import enums.ShelterType;
 import model.Restaurant;
 import model.Shelter;
 import model.User;
-import datastructure.AuditLog;
 
 public class Menu {
 
@@ -62,7 +61,7 @@ public class Menu {
         }
 
         System.out.println("[✓] Login berhasil. Selamat datang, " + found.getUsername() + "!\n");
-        auditLog.log(username, ActionType.LOGIN, found.getUserId(), "Login successful");
+        auditLog.logAction(username, ActionType.LOGIN, found.getUserId(), "Login successful");
     }
 
     public static void showRegistration() {
@@ -95,7 +94,7 @@ public class Menu {
 
         Restaurant r = new Restaurant(name, owner, username, password, phone, address, lat, lon, category);
         allUsers.add(r);
-        auditLog.log(username, ActionType.REGISTER, r.getUserId(), "Registered restaurant: " + name);
+        auditLog.logAction(username, ActionType.REGISTER, r.getUserId(), "Registered restaurant: " + name);
 
         System.out.println("\n[✓] Registrasi berhasil. Akun Anda sedang menunggu verifikasi admin.\n");
     }
@@ -124,7 +123,7 @@ public class Menu {
 
         Shelter s = new Shelter(name, manager, username, password, phone, address, lat, lon, residents, type);
         allUsers.add(s);
-        auditLog.log(username, ActionType.REGISTER, s.getUserId(), "Registered shelter: " + name);
+        auditLog.logAction(username, ActionType.REGISTER, s.getUserId(), "Registered shelter: " + name);
 
         System.out.println("\n[✓] Registrasi berhasil. Akun Anda sedang menunggu verifikasi admin.\n");
     }
