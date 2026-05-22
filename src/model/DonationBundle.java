@@ -8,9 +8,9 @@ import java.util.List;
 
 public class DonationBundle {
 
-    private String bundleId;
-    private List<FoodDonation> donations;
-    private LocalDateTime createdAt;
+    private final String bundleId;
+    private final List<FoodDonation> donations;
+    private final LocalDateTime createdAt;
 
     public DonationBundle() {
         this.bundleId = IdGenerator.nextBundleId();
@@ -18,58 +18,37 @@ public class DonationBundle {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void addDonation(FoodDonation donation) {
-        donations.add(donation);
+    public void addDonation(FoodDonation d) {
+        donations.add(d);
     }
 
     public int getTotalPortions() {
         int total = 0;
-
-        for (FoodDonation donation : donations) {
-            total += donation.getPortions();
-        }
-
+        for (FoodDonation d : donations)
+            total += d.getPortions();
         return total;
     }
 
     public LocalDateTime getEarliestExpiry() {
-
-        if (donations.isEmpty()) {
-            return LocalDateTime.MAX;
+        LocalDateTime earliest = null;
+        for (FoodDonation d : donations) {
+            if (earliest == null || d.getExpiredAt().isBefore(earliest))
+                earliest = d.getExpiredAt();
         }
-
-        LocalDateTime earliest = donations.get(0).getExpiredAt();
-
-        for (FoodDonation donation : donations) {
-            LocalDateTime expired = donation.getExpiredAt();
-
-            if (expired.isBefore(earliest)) {
-                earliest = expired;
-            }
-        }
-
         return earliest;
     }
 
     public List<Restaurant> getRestaurantList() {
-        List<Restaurant> restaurants = new ArrayList<>();
-
-        for (FoodDonation donation : donations) {
-            Restaurant r = donation.getRestaurant();
-
-            if (!restaurants.contains(r)) {
-                restaurants.add(r);
-            }
-        }
-
-        return restaurants;
+        List<Restaurant> list = new ArrayList<>();
+        for (FoodDonation d : donations)
+            list.add(d.getRestaurant());
+        return list;
     }
 
     public boolean isStillValid() {
-        for (FoodDonation donation : donations) {
-            if (!donation.isStillFresh()) {
+        for (FoodDonation d : donations) {
+            if (!d.isStillFresh())
                 return false;
-            }
         }
         return true;
     }

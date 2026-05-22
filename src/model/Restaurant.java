@@ -3,8 +3,7 @@ package model;
 import enums.AccountStatus;
 import enums.DonationStatus;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Restaurant extends User {
 
@@ -25,7 +24,7 @@ public class Restaurant extends User {
         this.lat = lat;
         this.lon = lon;
         this.foodCategory = foodCategory;
-        this.donations = new ArrayList<>();
+        this.donations = new LinkedList<>();
     }
 
     public void postDonation(FoodDonation d) {

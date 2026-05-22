@@ -1,36 +1,72 @@
 package datastructure;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import model.DeliveryOrder;
+import model.FoodDonation;
 import enums.OrderStatus;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class DeliveryHistory {
 
-    private ArrayList<DeliveryOrder> orderList;
+    private final LinkedList<DeliveryOrder> history;
+
+    private final LinkedList<FoodDonation> wastedHistory;
 
     public DeliveryHistory() {
-        this.orderList = new ArrayList<>();
+        this.history = new LinkedList<>();
+        this.wastedHistory = new LinkedList<>();
     }
 
-    public void addOrder(DeliveryOrder order) {
-        orderList.add(order);
-        System.out.println("Order " + order.getOrderId() + " berhasil dicatat di History.");
+    public void addFirst(DeliveryOrder order) {
+        history.addFirst(order);
     }
 
-    public ArrayList<DeliveryOrder> getAllOrders() {
-        return orderList;
+    public void addWasted(FoodDonation d) {
+        wastedHistory.addFirst(d);
+    }
+
+    public DeliveryOrder getLatest() {
+        return history.isEmpty() ? null : history.getFirst();
     }
 
     public List<DeliveryOrder> filterByStatus(OrderStatus status) {
         List<DeliveryOrder> result = new ArrayList<>();
+        for (DeliveryOrder o : history) {
+            if (o.getStatus() == status)
+                result.add(o);
+        }
+        return result;
+    }
 
-        for (DeliveryOrder order : orderList) {
-            if (order.getStatus() == status) {
-                result.add(order);
+    public List<DeliveryOrder> filterByShelter(String shelterId) {
+        List<DeliveryOrder> result = new ArrayList<>();
+        for (DeliveryOrder o : history) {
+            if (o.getShelter().getUserId().equals(shelterId))
+                result.add(o);
+        }
+        return result;
+    }
+
+    public List<DeliveryOrder> filterByRestaurant(String restaurantId) {
+        List<DeliveryOrder> result = new ArrayList<>();
+        for (DeliveryOrder o : history) {
+            for (model.Restaurant r : o.getBundle().getRestaurantList()) {
+                if (r.getUserId().equals(restaurantId)) {
+                    result.add(o);
+                    break;
+                }
             }
         }
         return result;
+    }
+
+    public List<DeliveryOrder> getAll() {
+        return new ArrayList<>(history);
+    }
+
+    public List<FoodDonation> getWastedHistory() {
+        return new ArrayList<>(wastedHistory);
     }
 }

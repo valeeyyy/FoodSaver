@@ -2,7 +2,7 @@ package model;
 
 import enums.ShelterType;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Shelter extends User {
@@ -14,7 +14,8 @@ public class Shelter extends User {
     private int residents;
     private ShelterType shelterType;
     private int portionsToday;
-    private List<DeliveryOrder> receiptHistory;
+
+    private final LinkedList<DeliveryOrder> receiptHistory;
 
     public Shelter(String name, String managerName,
             String username, String password,
@@ -29,18 +30,16 @@ public class Shelter extends User {
         this.residents = residents;
         this.shelterType = shelterType;
         this.portionsToday = 0;
-        this.receiptHistory = new ArrayList<>();
+        this.receiptHistory = new LinkedList<>();
     }
 
     public void confirmReceipt(DeliveryOrder order, int rating, String notes) {
-        if (order == null) {
-            System.out.println("[✗] Order tidak ditemukan.");
-            return;
-        }
         order.confirmDelivery(rating, notes);
-        portionsToday += order.getBundle().getTotalPortions() - order.getPortionSurplus();
-        receiptHistory.add(order);
-        System.out.println("[✓] Penerimaan dikonfirmasi. Rating: " + rating + "/5");
+        receiptHistory.addFirst(order);
+    }
+
+    public List<DeliveryOrder> viewReceiptHistory() {
+        return receiptHistory;
     }
 
     public void updateResidents(int count) {
@@ -60,8 +59,8 @@ public class Shelter extends User {
         portionsToday = 0;
     }
 
-    public List<DeliveryOrder> viewReceiptHistory() {
-        return receiptHistory;
+    public void addPortionsToday(int p) {
+        portionsToday += p;
     }
 
     public String getName() {
@@ -90,10 +89,6 @@ public class Shelter extends User {
 
     public int getPortionsToday() {
         return portionsToday;
-    }
-
-    public void addPortionsToday(int p) {
-        portionsToday += p;
     }
 
     @Override

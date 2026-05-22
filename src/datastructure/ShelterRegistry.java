@@ -1,10 +1,12 @@
 package datastructure;
-import java.util.Collection;
+
+import model.Shelter;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import model.Shelter;
 
 public class ShelterRegistry {
 
@@ -18,23 +20,28 @@ public class ShelterRegistry {
         map.put(s.getUserId(), s);
     }
 
-    public void remove(Shelter s) {
-        map.remove(s.getUserId());
-    }
-
     public void remove(String id) {
         map.remove(id);
-    }
-
-    public List<Shelter> getActiveShelters() {
-        return new ArrayList<>(map.values());
     }
 
     public Shelter findById(String id) {
         return map.get(id);
     }
 
+    public List<Shelter> findAllEligible() {
+        List<Shelter> result = new ArrayList<>();
+        for (Shelter s : map.values()) {
+            if (s.canReceiveMore())
+                result.add(s);
+        }
+        return result;
+    }
+
     public Collection<Shelter> getAll() {
         return map.values();
+    }
+
+    public boolean contains(String id) {
+        return map.containsKey(id);
     }
 }

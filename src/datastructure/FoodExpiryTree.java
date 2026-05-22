@@ -1,28 +1,72 @@
 package datastructure;
 
-import java.util.Comparator;
-import java.util.PriorityQueue;
 import model.FoodDonation;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class FoodExpiryTree {
 
-    private PriorityQueue<FoodDonation> expiryQueue;
+    private final TreeMap<LocalDateTime, List<FoodDonation>> tree;
 
     public FoodExpiryTree() {
+        this.tree = new TreeMap<>();
+    }
 
-        expiryQueue = new PriorityQueue<>(new Comparator<FoodDonation>() {
-            @Override
-            public int compare(FoodDonation d1, FoodDonation d2) {
-                return d1.getExpiredAt().compareTo(d2.getExpiredAt());
+    public void insert(FoodDonation d) {
+        tree.computeIfAbsent(d.getExpiredAt(), k -> new ArrayList<>()).add(d);
+    }
+
+    public List<FoodDonation> getByPriority() {
+        List<FoodDonation> result = new ArrayList<>();
+        for (Map.Entry<LocalDateTime, List<FoodDonation>> entry : tree.entrySet()) {
+            result.addAll(entry.getValue());
+        }
+        return result;
+    }
+
+    public FoodDonation peekEarliest() {
+        if (tree.isEmpty())
+            return null;
+        Map.Entry<LocalDateTime, List<FoodDonation>> first = tree.firstEntry();
+        List<FoodDonation> list = first.getValue();
+        return list.isEmpty() ? null : list.get(0);
+    }
+
+    public int purgeExpired() {
+        LocalDateTime now = LocalDateTime.now();
+        List<LocalDateTime> expiredKeys = new ArrayList<>();
+        int count = 0;
+        for (Map.Entry<LocalDateTime, List<FoodDonation>> entry : tree.entrySet()) {
+            if (entry.getKey().isBefore(now)) {
+                count += entry.getValue().size();
+                expiredKeys.add(entry.getKey());
+            } else {
+                break;
             }
-        });
+        }
+        for (LocalDateTime k : expiredKeys)
+            tree.remove(k);
+        return count;
     }
 
-    public void addDonation(FoodDonation donation) {
-        expiryQueue.add(donation);
+    public void remove(FoodDonation d) {
+        List<FoodDonation> bucket = tree.get(d.getExpiredAt());
+        if (bucket != null) {
+            bucket.remove(d);
+            if (bucket.isEmpty())
+                tree.remove(d.getExpiredAt());
+        }
     }
 
-    public FoodDonation getEarliestExpiringDonation() {
-        return expiryQueue.poll(); 
+    public int size() {
+        return tree.values().stream().mapToInt(List::size).sum();
+    }
+
+    public boolean isEmpty() {
+        return size() == 0;
     }
 }
