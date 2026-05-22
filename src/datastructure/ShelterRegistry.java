@@ -1,5 +1,5 @@
 package datastructure;
-
+import java.util.Collection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,5 +32,9 @@ public class ShelterRegistry {
 
     public Shelter findById(String id) {
         return map.get(id);
+    }
+
+    public Collection<Shelter> getAll() {
+        return map.values();
     }
 }
