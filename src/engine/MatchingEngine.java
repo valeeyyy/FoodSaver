@@ -8,15 +8,15 @@ import datastructure.ShelterRegistry;
 import util.SystemConfig;
 
 public class MatchingEngine {
-    
+
     private DonationPool pool;
     private ShelterRegistry registry;
     private FoodExpiryTree expiryTree;
     private DeliveryHistory history;
     private AuditLog auditLog;
 
-    // Constructor agar sesuai dengan pemanggilan di AppContext
-    public MatchingEngine(DonationPool pool, ShelterRegistry registry, FoodExpiryTree expiryTree, DeliveryHistory history, AuditLog auditLog) {
+    public MatchingEngine(DonationPool pool, ShelterRegistry registry, FoodExpiryTree expiryTree,
+            DeliveryHistory history, AuditLog auditLog) {
         this.pool = pool;
         this.registry = registry;
         this.expiryTree = expiryTree;
@@ -29,6 +29,7 @@ public class MatchingEngine {
     }
 
     public void runWithExpandedRadius() {
-        System.out.println("[MatchingEngine] Menjalankan matching dengan radius diperluas: " + SystemConfig.EXPANDED_RADIUS_KM + " km");
+        System.out.println("[MatchingEngine] Menjalankan matching dengan radius diperluas: "
+                + SystemConfig.EXPANDED_RADIUS_KM + " km");
     }
 }

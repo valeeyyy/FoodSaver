@@ -8,17 +8,10 @@ import java.util.TreeMap;
 import model.FoodDonation;
 
 public class FoodExpiryTree {
-
-    private PriorityQueue<FoodDonation> expiryQueue;
+    private final TreeMap<LocalDateTime, List<FoodDonation>> tree;
 
     public FoodExpiryTree() {
-
-        expiryQueue = new PriorityQueue<>(new Comparator<FoodDonation>() {
-            @Override
-            public int compare(FoodDonation d1, FoodDonation d2) {
-                return d1.getExpiredAt().compareTo(d2.getExpiredAt());
-            }
-        });
+        this.tree = new TreeMap<>();
     }
 
     // Method insert yang sebelumnya hilang
