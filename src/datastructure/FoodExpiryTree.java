@@ -1,7 +1,9 @@
 package datastructure;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
 
 import model.FoodDonation;
 
@@ -10,6 +12,11 @@ public class FoodExpiryTree {
 
     public FoodExpiryTree() {
         this.tree = new TreeMap<>();
+    }
+
+    // Method insert yang sebelumnya hilang
+    public void insert(FoodDonation d) {
+        tree.computeIfAbsent(d.getExpiredAt(), k -> new ArrayList<>()).add(d);
     }
 
     public void remove(FoodDonation d) {

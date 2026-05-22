@@ -9,5 +9,10 @@ public enum ActionType {
     EDIT_PROFILE,
     YELLOW_ALERT,
     RED_ALERT,
-    STARTUP_CLEANUP
+    STARTUP_CLEANUP,
+    EXPIRE,
+    WASTED,
+    POST,
+    MATCH,
+    DELIVER
 }
