@@ -1,19 +1,13 @@
 package ui;
 
-import java.util.*;
-
-import datastructure.AuditLog;
-import datastructure.DeliveryHistory;
-import datastructure.DonationPool;
-import datastructure.FoodExpiryTree;
-import datastructure.ShelterRegistry;
+import datastructure.*;
 import engine.MatchingEngine;
-import enums.ActionType;
+import model.*;
+import enums.AccountStatus;
 import enums.DonationStatus;
-import model.Admin;
-import model.FoodDonation;
-import model.Shelter;
-import model.User;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AppContext {
 
@@ -27,19 +21,19 @@ public class AppContext {
     public final Admin admin;
 
     public AppContext() {
+        pool = new DonationPool();
         registry = new ShelterRegistry();
-        auditLog = new AuditLog();
-        history = new DeliveryHistory();
         expiryTree = new FoodExpiryTree();
+        history = new DeliveryHistory();
+        auditLog = new AuditLog();
         allUsers = new ArrayList<>();
 
-        pool = new DonationPool(auditLog);
+        engine = new MatchingEngine(pool, registry, expiryTree, history, auditLog);
 
-        engine = new MatchingEngine();
+        pool.injectDependencies(auditLog, engine);
 
-        pool.setEngine(engine);
-
-        admin = new Admin("admin", "admin123", registry, auditLog, allUsers);
+        admin = new Admin("admin", "admin123", 1);
+        admin.injectDependencies(pool, registry, history, auditLog, allUsers);
         allUsers.add(admin);
     }
 
@@ -55,17 +49,43 @@ public class AppContext {
             if (d.getStatus() == DonationStatus.EXPIRED_UNDELIVERED) {
                 d.markAsWasted();
                 toClean.add(d);
-                auditLog.log("SYSTEM", ActionType.STARTUP_CLEANUP,
+                auditLog.log("SYSTEM",
+                        enums.ActionType.STARTUP_CLEANUP,
                         d.getDonationId(), "Moved to history as WASTED on startup");
             }
         }
         for (FoodDonation d : toClean) {
             pool.remove(d);
             expiryTree.remove(d);
-            history.addFirst(d);
-
-            System.out.println("[✓] Startup selesai. Akun admin default: admin / admin123");
-            System.out.println();
         }
+
+        System.out.println("[✓] Startup selesai. Akun admin default: admin / admin123");
+        System.out.println();
+    }
+
+    public void submitDonation(FoodDonation d) {
+        pool.enqueue(d);
+        expiryTree.insert(d);
+        auditLog.log(d.getRestaurant().getUsername(),
+                enums.ActionType.POST,
+                d.getDonationId(), "Posted: " + d.getFoodName());
+
+        System.out.println("\n[MatchingEngine] Donasi baru masuk — menjalankan matching...");
+        engine.run();
+    }
+
+    public User findUser(String username, String password) {
+        return allUsers.stream()
+                .filter(u -> u.getUsername().equals(username)
+                        && u.getPassword().equals(password))
+                .findFirst().orElse(null);
+    }
+
+    public DeliveryOrder findOrder(String orderId) {
+        for (DeliveryOrder o : history.getAll()) {
+            if (o.getOrderId().equals(orderId))
+                return o;
+        }
+        return null;
     }
 }

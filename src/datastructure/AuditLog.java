@@ -3,6 +3,7 @@ package datastructure;
 import enums.ActionType;
 import enums.AlertType;
 import java.util.*;
+
 import model.AuditEntry;
 
 public class AuditLog {
@@ -12,7 +13,7 @@ public class AuditLog {
     public AuditLog() {
         this.entries = new LinkedList<>();
     }
-
+    
     public void logAction(String actor, ActionType action, String targetId, String notes) {
         entries.addFirst(new AuditEntry(actor, action, targetId, notes));
     }

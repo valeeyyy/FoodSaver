@@ -2,6 +2,9 @@ package model;
 
 import enums.ShelterType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Shelter extends User {
 
     private String name;
@@ -11,6 +14,7 @@ public class Shelter extends User {
     private int residents;
     private ShelterType shelterType;
     private int portionsToday;
+    private List<DeliveryOrder> receiptHistory;
 
     public Shelter(String name, String managerName,
             String username, String password,
@@ -25,6 +29,18 @@ public class Shelter extends User {
         this.residents = residents;
         this.shelterType = shelterType;
         this.portionsToday = 0;
+        this.receiptHistory = new ArrayList<>();
+    }
+
+    public void confirmReceipt(DeliveryOrder order, int rating, String notes) {
+        if (order == null) {
+            System.out.println("[✗] Order tidak ditemukan.");
+            return;
+        }
+        order.confirmDelivery(rating, notes);
+        portionsToday += order.getBundle().getTotalPortions() - order.getPortionSurplus();
+        receiptHistory.add(order);
+        System.out.println("[✓] Penerimaan dikonfirmasi. Rating: " + rating + "/5");
     }
 
     public void updateResidents(int count) {
@@ -42,6 +58,10 @@ public class Shelter extends User {
 
     public void resetDailyPortions() {
         portionsToday = 0;
+    }
+
+    public List<DeliveryOrder> viewReceiptHistory() {
+        return receiptHistory;
     }
 
     public String getName() {
