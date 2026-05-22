@@ -5,9 +5,9 @@ import enums.AccountStatus;
 import java.util.Scanner;
 
 public class FoodSaverApp {
+
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-
         AppContext ctx = new AppContext();
         ctx.startup();
 
@@ -38,6 +38,10 @@ public class FoodSaverApp {
         System.out.println("╚══════════════════════════════════════╝");
     }
 
+    /**
+     * Fitur 3.2.2 — Alur login menggunakan HashMap O(1) via ctx.findUser().
+     * Sistem menolak login jika akun REJECTED, menampilkan notifikasi jika PENDING.
+     */
     private static void loginFlow(Scanner sc, AppContext ctx) {
         printHeader("LOGIN");
         String username = readNonEmpty(sc, "Username : ");
@@ -69,12 +73,13 @@ public class FoodSaverApp {
             System.out.println("[✗] Jenis pengguna tidak dikenali.");
     }
 
+    // ── Input helpers ────────────────────────────────────────────────────────
+
     public static String readNonEmpty(Scanner sc, String prompt) {
         while (true) {
             System.out.print(prompt);
             String v = sc.nextLine().trim();
-            if (!v.isEmpty())
-                return v;
+            if (!v.isEmpty()) return v;
             System.out.println("[✗] Input tidak boleh kosong. Silakan coba lagi.");
         }
     }
@@ -83,34 +88,11 @@ public class FoodSaverApp {
         while (true) {
             System.out.print(prompt);
             String raw = sc.nextLine().trim();
-            if (raw.isEmpty()) {
-                System.out.println("[✗] Input tidak boleh kosong.");
-                continue;
-            }
+            if (raw.isEmpty()) { System.out.println("[✗] Input tidak boleh kosong."); continue; }
             try {
                 int v = Integer.parseInt(raw);
-                if (v > 0)
-                    return v;
+                if (v > 0) return v;
                 System.out.println("[✗] Angka harus lebih dari 0.");
-            } catch (NumberFormatException e) {
-                System.out.println("[✗] \"" + raw + "\" bukan angka bulat yang valid.");
-            }
-        }
-    }
-
-    public static int readNonNegativeInt(Scanner sc, String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String raw = sc.nextLine().trim();
-            if (raw.isEmpty()) {
-                System.out.println("[✗] Input tidak boleh kosong.");
-                continue;
-            }
-            try {
-                int v = Integer.parseInt(raw);
-                if (v >= 0)
-                    return v;
-                System.out.println("[✗] Angka tidak boleh negatif.");
             } catch (NumberFormatException e) {
                 System.out.println("[✗] \"" + raw + "\" bukan angka bulat yang valid.");
             }
@@ -121,14 +103,10 @@ public class FoodSaverApp {
         while (true) {
             System.out.print(prompt);
             String raw = sc.nextLine().trim();
-            if (raw.isEmpty()) {
-                System.out.printf("[✗] Masukkan angka %d–%d.%n", min, max);
-                continue;
-            }
+            if (raw.isEmpty()) { System.out.printf("[✗] Masukkan angka %d–%d.%n", min, max); continue; }
             try {
                 int v = Integer.parseInt(raw);
-                if (v >= min && v <= max)
-                    return v;
+                if (v >= min && v <= max) return v;
                 System.out.printf("[✗] Angka harus antara %d–%d.%n", min, max);
             } catch (NumberFormatException e) {
                 System.out.println("[✗] \"" + raw + "\" bukan angka bulat yang valid.");
@@ -140,14 +118,10 @@ public class FoodSaverApp {
         while (true) {
             System.out.print(prompt);
             String raw = sc.nextLine().trim();
-            if (raw.isEmpty()) {
-                System.out.printf("[✗] Masukkan desimal %.2f–%.2f.%n", min, max);
-                continue;
-            }
+            if (raw.isEmpty()) { System.out.printf("[✗] Masukkan desimal %.2f–%.2f.%n", min, max); continue; }
             try {
                 double v = Double.parseDouble(raw);
-                if (v >= min && v <= max)
-                    return v;
+                if (v >= min && v <= max) return v;
                 System.out.printf("[✗] Nilai harus antara %.2f dan %.2f.%n", min, max);
             } catch (NumberFormatException e) {
                 System.out.println("[✗] Gunakan titik (.) sebagai pemisah desimal.");
@@ -159,25 +133,13 @@ public class FoodSaverApp {
         while (true) {
             System.out.print(prompt);
             String raw = sc.nextLine().trim();
-            if (raw.isEmpty()) {
-                System.out.println("[✗] Masukkan waktu format HH:MM.");
-                continue;
-            }
+            if (raw.isEmpty()) { System.out.println("[✗] Masukkan waktu format HH:MM."); continue; }
             String[] parts = raw.split(":");
-            if (parts.length != 2) {
-                System.out.println("[✗] Format HH:MM. Contoh: 14:30.");
-                continue;
-            }
+            if (parts.length != 2) { System.out.println("[✗] Format HH:MM. Contoh: 14:30."); continue; }
             try {
                 int h = Integer.parseInt(parts[0]), m = Integer.parseInt(parts[1]);
-                if (h < 0 || h > 23) {
-                    System.out.println("[✗] Jam harus 00–23.");
-                    continue;
-                }
-                if (m < 0 || m > 59) {
-                    System.out.println("[✗] Menit harus 00–59.");
-                    continue;
-                }
+                if (h < 0 || h > 23) { System.out.println("[✗] Jam harus 00–23."); continue; }
+                if (m < 0 || m > 59) { System.out.println("[✗] Menit harus 00–59."); continue; }
                 return raw;
             } catch (NumberFormatException e) {
                 System.out.println("[✗] Format salah. Contoh: 08:30.");
@@ -190,8 +152,7 @@ public class FoodSaverApp {
             System.out.print(prompt);
             String raw = sc.nextLine().trim();
             for (String v : validChoices)
-                if (v.equalsIgnoreCase(raw))
-                    return raw.toUpperCase();
+                if (v.equalsIgnoreCase(raw)) return raw.toUpperCase();
             System.out.println("[✗] Pilihan tidak valid. Pilih: " + String.join(", ", validChoices));
         }
     }
@@ -200,10 +161,8 @@ public class FoodSaverApp {
         while (true) {
             System.out.print(prompt);
             String raw = sc.nextLine().trim();
-            if (raw.equalsIgnoreCase("Y"))
-                return true;
-            if (raw.equalsIgnoreCase("N"))
-                return false;
+            if (raw.equalsIgnoreCase("Y")) return true;
+            if (raw.equalsIgnoreCase("N")) return false;
             System.out.println("[✗] Masukkan Y atau N.");
         }
     }
@@ -212,16 +171,11 @@ public class FoodSaverApp {
         while (true) {
             System.out.print(prompt);
             String raw = sc.nextLine().trim();
-            if (raw.isEmpty()) {
-                System.out.printf("[✗] Masukkan 0–%d.%n", maxIndex);
-                continue;
-            }
+            if (raw.isEmpty()) { System.out.printf("[✗] Masukkan 0–%d.%n", maxIndex); continue; }
             try {
                 int v = Integer.parseInt(raw);
-                if (v == 0)
-                    return 0;
-                if (v >= 1 && v <= maxIndex)
-                    return v;
+                if (v == 0) return 0;
+                if (v >= 1 && v <= maxIndex) return v;
                 System.out.printf("[✗] Masukkan angka 0 (batal) hingga %d.%n", maxIndex);
             } catch (NumberFormatException e) {
                 System.out.println("[✗] \"" + raw + "\" bukan angka yang valid.");
@@ -233,10 +187,7 @@ public class FoodSaverApp {
         while (true) {
             System.out.print(prompt);
             String raw = sc.nextLine().trim();
-            if (raw.isEmpty()) {
-                System.out.println("[✗] Nomor HP tidak boleh kosong.");
-                continue;
-            }
+            if (raw.isEmpty()) { System.out.println("[✗] Nomor HP tidak boleh kosong."); continue; }
             if (!raw.matches("[+]?[0-9][0-9\\-]{6,}")) {
                 System.out.println("[✗] Nomor HP tidak valid. Contoh: 08123456789 (min. 8 digit).");
                 continue;
@@ -249,14 +200,8 @@ public class FoodSaverApp {
         while (true) {
             System.out.print(prompt);
             String raw = sc.nextLine().trim();
-            if (raw.isEmpty()) {
-                System.out.println("[✗] Username tidak boleh kosong.");
-                continue;
-            }
-            if (raw.length() < 4) {
-                System.out.println("[✗] Username minimal 4 karakter.");
-                continue;
-            }
+            if (raw.isEmpty()) { System.out.println("[✗] Username tidak boleh kosong."); continue; }
+            if (raw.length() < 4) { System.out.println("[✗] Username minimal 4 karakter."); continue; }
             if (!raw.matches("[a-zA-Z0-9_]+")) {
                 System.out.println("[✗] Username hanya boleh huruf, angka, dan underscore (_).");
                 continue;
@@ -269,14 +214,8 @@ public class FoodSaverApp {
         while (true) {
             System.out.print(prompt);
             String raw = sc.nextLine();
-            if (raw.isEmpty()) {
-                System.out.println("[✗] Password tidak boleh kosong.");
-                continue;
-            }
-            if (raw.length() < 6) {
-                System.out.println("[✗] Password minimal 6 karakter.");
-                continue;
-            }
+            if (raw.isEmpty()) { System.out.println("[✗] Password tidak boleh kosong."); continue; }
+            if (raw.length() < 6) { System.out.println("[✗] Password minimal 6 karakter."); continue; }
             return raw;
         }
     }

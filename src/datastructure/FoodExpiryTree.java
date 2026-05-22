@@ -1,7 +1,10 @@
 package datastructure;
 
-import java.util.Comparator;
-import java.util.PriorityQueue;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
+
 import model.FoodDonation;
 
 public class FoodExpiryTree {
@@ -18,11 +21,16 @@ public class FoodExpiryTree {
         });
     }
 
-    public void addDonation(FoodDonation donation) {
-        expiryQueue.add(donation);
+    // Method insert yang sebelumnya hilang
+    public void insert(FoodDonation d) {
+        tree.computeIfAbsent(d.getExpiredAt(), k -> new ArrayList<>()).add(d);
     }
 
-    public FoodDonation getEarliestExpiringDonation() {
-        return expiryQueue.poll(); 
+    public void remove(FoodDonation d) {
+        List<FoodDonation> bucket = tree.get(d.getExpiredAt());
+        if (bucket != null) {
+            bucket.remove(d);
+            if (bucket.isEmpty()) tree.remove(d.getExpiredAt());
+        }
     }
 }
