@@ -18,10 +18,10 @@ public class DonationPool {
     private MatchingEngine engine;
 
     public DonationPool(AuditLog auditLog) {
-        this.queue              = new LinkedList<>();
+        this.queue = new LinkedList<>();
         this.yellowAlertMinutes = SystemConfig.YELLOW_ALERT_MINUTES;
-        this.redAlertMinutes    = SystemConfig.FRESHNESS_BUFFER_MIN;
-        this.auditLog           = auditLog;
+        this.redAlertMinutes = SystemConfig.FRESHNESS_BUFFER_MIN;
+        this.auditLog = auditLog;
     }
 
     public void setEngine(MatchingEngine engine) {
@@ -106,11 +106,11 @@ public class DonationPool {
         return list;
     }
 
-    public boolean isEmpty() { 
-        return queue.isEmpty(); 
+    public boolean isEmpty() {
+        return queue.isEmpty();
     }
 
-    public int size() { 
-        return queue.size(); 
+    public int size() {
+        return queue.size();
     }
 }

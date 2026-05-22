@@ -96,6 +96,10 @@ public class FoodDonation {
         this.portions = p;
     }
 
+    public void setStatus(DonationStatus s) {
+        this.status = s;
+    }
+
     @Override
     public String toString() {
 
