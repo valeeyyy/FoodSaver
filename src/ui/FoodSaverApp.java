@@ -1,9 +1,8 @@
 package ui;
 
-import model.*;
 import enums.AccountStatus;
-
 import java.util.Scanner;
+import model.*;
 
 public class FoodSaverApp {
 
@@ -30,7 +29,7 @@ public class FoodSaverApp {
 
     private static void printMainMenu() {
         System.out.println("\n╔══════════════════════════════════════╗");
-        System.out.println("║         🍱  F O O D S A V E R        ║");
+        System.out.println("║         🍱  F O O D S A V E R         ║");
         System.out.println("║   Distribusi Surplus Pangan Otomatis ║");
         System.out.println("╠══════════════════════════════════════╣");
         System.out.println("║  [1] Login                           ║");
