@@ -73,7 +73,6 @@ public class MatchingEngine implements Notifiable {
 
         if (validOptions.isEmpty()) {
             System.out.println("[✗] Tidak ada kombinasi donasi-panti yang valid saat ini.");
-            pool.checkAlerts();
             return;
         }
 

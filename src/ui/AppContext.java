@@ -75,6 +75,7 @@ public class AppContext {
                 d.getDonationId(), "Posted: " + d.getFoodName());
         System.out.println("\n[MatchingEngine] Donasi baru masuk — menjalankan matching...");
         engine.run();
+        pool.checkAlerts();
     }
 
     public User findUser(String username, String password) {
