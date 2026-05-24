@@ -7,7 +7,7 @@ import datastructure.ShelterRegistry;
 import enums.AccountStatus;
 import enums.ActionType;
 import enums.DonationStatus;
-
+import enums.OrderStatus;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +107,40 @@ public class Admin extends User {
 
     public Shelter searchShelterById(String id) {
         return registry.findById(id);
+    }
+
+    public List<Restaurant> searchRestaurantByName(String keyword) {
+        List<Restaurant> result = new ArrayList<>();
+        String lower = keyword.toLowerCase();
+        for (User u : userMap.values()) {
+            if (u instanceof Restaurant r && r.getName().toLowerCase().contains(lower))
+                result.add(r);
+        }
+        return result;
+    }
+
+    public List<FoodDonation> searchDonationByName(String keyword) {
+        List<FoodDonation> result = new ArrayList<>();
+        String lower = keyword.toLowerCase();
+        for (FoodDonation d : pool.getAll()) {
+            if (d.getFoodName().toLowerCase().contains(lower))
+                result.add(d);
+        }
+        for (DeliveryOrder o : history.getAll()) {
+            for (FoodDonation d : o.getBundle().getDonations()) {
+                if (d.getFoodName().toLowerCase().contains(lower))
+                    result.add(d);
+            }
+        }
+        return result;
+    }
+
+    public List<DeliveryOrder> filterOrdersByStatus(OrderStatus status) {
+        return history.filterByStatus(status);
+    }
+
+    public List<AuditEntry> filterAuditLogByActor(String username) {
+        return auditLog.filterByActor(username);
     }
 
     public int getAdminLevel() {

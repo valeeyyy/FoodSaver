@@ -1,14 +1,13 @@
 package ui;
 
-import model.*;
 import enums.*;
-import util.SystemConfig;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import model.*;
+import util.SystemConfig;
 
 public class Menu {
 
@@ -104,15 +103,21 @@ public class Menu {
             System.out.println("  [3] Stok donasi aktif");
             System.out.println("  [4] AuditLog");
             System.out.println("  [5] Cari panti by ID");
+            System.out.println("  [6] Cari restoran / donasi by nama");
+            System.out.println("  [7] Filter order by status");
+            System.out.println("  [8] Cari AuditLog by username");
             System.out.println("  [0] Logout");
             FoodSaverApp.printDivider();
-            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "4", "5", "0");
+            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "4", "5", "6", "7", "8", "0");
             switch (ch) {
                 case "1" -> adminVerifyAccounts(ctx, sc, admin);
                 case "2" -> adminViewUnmatched(admin);
                 case "3" -> adminViewActiveDonations(admin);
                 case "4" -> adminViewAuditLog(ctx, sc);
                 case "5" -> adminSearchShelter(sc, admin);
+                case "6" -> adminSearchByName(ctx, sc, admin);
+                case "7" -> adminFilterOrdersByStatus(ctx, sc, admin);
+                case "8" -> adminFilterAuditByActor(ctx, sc, admin);
                 case "0" -> {
                     admin.logout();
                     running = false;
@@ -219,6 +224,87 @@ public class Menu {
         }
         System.out.printf("[✓] %s | Penghuni: %d | Kebutuhan: %d | Status: %s%n",
                 s.getName(), s.getResidents(), s.getRemainingNeed(), s.getAccountStatus());
+    }
+
+    private static void adminSearchByName(AppContext ctx, Scanner sc, Admin admin) {
+        FoodSaverApp.printHeader("PENCARIAN BERDASARKAN NAMA");
+        System.out.println("  [1] Cari restoran by nama");
+        System.out.println("  [2] Cari donasi by nama makanan");
+        System.out.println("  [0] Kembali");
+        FoodSaverApp.printDivider();
+        String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "0");
+
+        switch (ch) {
+            case "1" -> {
+                String keyword = FoodSaverApp.readNonEmpty(sc, "Nama restoran (sebagian/penuh): ");
+                List<Restaurant> results = admin.searchRestaurantByName(keyword);
+                if (results.isEmpty()) {
+                    System.out.println("[!] Tidak ada restoran yang cocok dengan \"" + keyword + "\".");
+                    return;
+                }
+                FoodSaverApp.printHeader("HASIL PENCARIAN RESTORAN — \"" + keyword + "\"");
+                for (Restaurant r : results)
+                    System.out.printf("  %s | %-25s | Pemilik: %s | Status: %s%n",
+                            r.getUserId(), r.getName(), r.getOwnerName(), r.getAccountStatus());
+            }
+            case "2" -> {
+                String keyword = FoodSaverApp.readNonEmpty(sc, "Nama makanan (sebagian/penuh): ");
+                List<FoodDonation> results = admin.searchDonationByName(keyword);
+                if (results.isEmpty()) {
+                    System.out.println("[!] Tidak ada donasi yang cocok dengan \"" + keyword + "\".");
+                    return;
+                }
+                FoodSaverApp.printHeader("HASIL PENCARIAN DONASI — \"" + keyword + "\"");
+                for (FoodDonation d : results)
+                    System.out.printf("  %s | %-20s | %3d porsi | status: %-20s | dari: %s%n",
+                            d.getDonationId(), d.getFoodName(), d.getPortions(),
+                            d.getStatus(), d.getRestaurant().getName());
+            }
+        }
+    }
+
+    private static void adminFilterOrdersByStatus(AppContext ctx, Scanner sc, Admin admin) {
+        FoodSaverApp.printHeader("FILTER ORDER BERDASARKAN STATUS");
+        System.out.println("  [1] WAITING_PICKUP");
+        System.out.println("  [2] PICKED_UP");
+        System.out.println("  [3] IN_TRANSIT");
+        System.out.println("  [4] DELIVERED");
+        System.out.println("  [5] CANCELLED");
+        System.out.println("  [0] Kembali");
+        FoodSaverApp.printDivider();
+        String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "4", "5", "0");
+        if (ch.equals("0"))
+            return;
+
+        OrderStatus status = switch (ch) {
+            case "2" -> OrderStatus.PICKED_UP;
+            case "3" -> OrderStatus.IN_TRANSIT;
+            case "4" -> OrderStatus.DELIVERED;
+            case "5" -> OrderStatus.CANCELLED;
+            default -> OrderStatus.WAITING_PICKUP;
+        };
+
+        List<DeliveryOrder> results = admin.filterOrdersByStatus(status);
+        if (results.isEmpty()) {
+            System.out.println("[!] Tidak ada order dengan status " + status + ".");
+            return;
+        }
+        FoodSaverApp.printHeader("ORDER — " + status);
+        for (DeliveryOrder o : results)
+            System.out.printf("  %s | Tujuan: %-20s | Porsi: %3d | Rating: %d%n",
+                    o.getOrderId(), o.getShelter().getName(),
+                    o.getBundle().getTotalPortions(), o.getRating());
+    }
+
+    private static void adminFilterAuditByActor(AppContext ctx, Scanner sc, Admin admin) {
+        String username = FoodSaverApp.readNonEmpty(sc, "Masukkan username yang ingin dicari: ");
+        List<AuditEntry> results = admin.filterAuditLogByActor(username);
+        if (results.isEmpty()) {
+            System.out.println("[!] Tidak ada entri audit untuk username \"" + username + "\".");
+            return;
+        }
+        FoodSaverApp.printHeader("AUDIT LOG — " + username);
+        results.forEach(System.out::println);
     }
 
     public static void showRestaurant(AppContext ctx, Scanner sc, Restaurant restaurant) {
