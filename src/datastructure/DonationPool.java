@@ -79,7 +79,6 @@ public class DonationPool {
                 d.markAsExpired();
 
             } else if (remaining <= yellowAlertMinutes && d.getStatus() == DonationStatus.WAITING) {
-                // Fitur 3.2.5 - YELLOW ALERT: buat Notification, display(), lalu toAuditEntry()
                 Notification yellow = Notification.createYellowAlert(d.getDonationId());
                 yellow.display();
                 if (auditLog != null) {
@@ -95,7 +94,6 @@ public class DonationPool {
             engine.runWithExpandedRadius();
         }
     }
-
 
     public List<FoodDonation> getAll() {
         return new ArrayList<>(queue);
