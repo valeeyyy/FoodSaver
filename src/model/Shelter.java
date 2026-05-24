@@ -91,6 +91,13 @@ public class Shelter extends User {
         return portionsToday;
     }
 
+    public void setName(String name)             { this.name = name; }
+    public void setManagerName(String mgr)       { this.managerName = mgr; }
+    public void setLat(double lat)               { this.lat = lat; }
+    public void setLon(double lon)               { this.lon = lon; }
+    public void setResidents(int residents)      { this.residents = residents; }
+    public void setShelterType(ShelterType type) { this.shelterType = type; }
+
     @Override
     public String toString() {
         return String.format("Shelter{id='%s', name='%s', residents=%d, need=%d, status=%s}",

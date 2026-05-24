@@ -110,20 +110,23 @@ public class Menu {
             System.out.println("  [7] Filter order by status");
             System.out.println("  [8] Cari AuditLog by username");
             System.out.println("  [9] Filter donasi by status (EXPIRED/WASTED)");
+            System.out.println("  [10] Review permintaan edit profil");
             System.out.println("  [0] Logout");
             FoodSaverApp.printDivider();
-            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0");
+            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ",
+                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "0");
             switch (ch) {
-                case "1" -> adminVerifyAccounts(ctx, sc, admin);
-                case "2" -> adminViewUnmatched(admin);
-                case "3" -> adminViewActiveDonations(admin, ctx);
-                case "4" -> {}
-                case "5" -> adminSearchShelter(sc, admin);
-                case "6" -> adminSearchByName(ctx, sc, admin);
-                case "7" -> adminFilterOrdersByStatus(ctx, sc, admin);
-                case "8" -> adminFilterAuditByActor(ctx, sc, admin);
-                case "9" -> adminFilterDonationByStatus(ctx, sc, admin);
-                case "0" -> {
+                case "1"  -> adminVerifyAccounts(ctx, sc, admin);
+                case "2"  -> adminViewUnmatched(admin);
+                case "3"  -> adminViewActiveDonations(admin, ctx);
+                case "4"  -> {}
+                case "5"  -> adminSearchShelter(sc, admin);
+                case "6"  -> adminSearchByName(ctx, sc, admin);
+                case "7"  -> adminFilterOrdersByStatus(ctx, sc, admin);
+                case "8"  -> adminFilterAuditByActor(ctx, sc, admin);
+                case "9"  -> adminFilterDonationByStatus(ctx, sc, admin);
+                case "10" -> adminReviewEditRequests(ctx, sc, admin);
+                case "0"  -> {
                     admin.logout();
                     running = false;
                 }
@@ -338,6 +341,58 @@ public class Menu {
                     d.getPortions(), d.getRestaurant().getName());
     }
 
+    private static void adminReviewEditRequests(AppContext ctx, Scanner sc, Admin admin) {
+        List<User> pending = admin.viewPendingEdits();
+        if (pending.isEmpty()) {
+            System.out.println("[!] Tidak ada permintaan edit profil yang menunggu.");
+            return;
+        }
+
+        FoodSaverApp.printHeader("PERMINTAAN EDIT PROFIL");
+        for (int i = 0; i < pending.size(); i++) {
+            User u = pending.get(i);
+            String type = u instanceof Restaurant ? "RESTORAN" : "PANTI";
+            EditRequest req = u.getPendingEditRequest();
+            System.out.printf("[%d] %s - %s%n", i + 1, type, u.getUsername());
+            System.out.printf("    Dikirim: %s%n",
+                    req.getRequestedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+            System.out.println("    Perubahan yang diminta:");
+            req.getNewData().forEach((k, v) -> {
+                String label = switch (k) {
+                    case "name"      -> "Nama";
+                    case "owner"     -> "Nama pemilik";
+                    case "manager"   -> "Nama pengurus";
+                    case "address"   -> "Alamat";
+                    case "lat"       -> "Koordinat lat";
+                    case "lon"       -> "Koordinat lon";
+                    case "category"  -> "Jenis makanan";
+                    case "residents" -> "Jumlah penghuni";
+                    case "type"      -> "Tipe panti";
+                    case "phone"     -> "No. HP";
+                    case "password"  -> "Password";
+                    default          -> k;
+                };
+                String display = k.equals("password") ? "****" : v;
+                System.out.printf("      - %s: %s%n", label, display);
+            });
+            System.out.println();
+        }
+
+        int choice = FoodSaverApp.readIndexOrCancel(sc, "Pilih nomor (0=kembali): ", pending.size());
+        if (choice == 0) return;
+
+        User target = pending.get(choice - 1);
+        System.out.println("\n=== REVIEW PERMINTAAN EDIT ===");
+        System.out.println("Panduan: Verifikasi data baru sebelum menyetujui.");
+        String decision = FoodSaverApp.readMenuChoice(sc,
+                "Keputusan [APPROVED/REJECTED/SKIP]: ", "APPROVED", "REJECTED", "SKIP");
+        if (decision.equals("SKIP")) return;
+
+        System.out.print("Catatan (opsional): ");
+        String notes = sc.nextLine();
+        admin.applyEditRequest(target, decision, notes);
+    }
+
     public static void showRestaurant(AppContext ctx, Scanner sc, Restaurant restaurant) {
         boolean running = true;
         while (running) {
@@ -346,20 +401,96 @@ public class Menu {
             System.out.println("  [2] Riwayat donasi saya");
             System.out.println("  [3] Edit porsi donasi");
             System.out.println("  [4] Batalkan donasi");
+            System.out.println("  [5] Edit profil restoran");
             System.out.println("  [0] Logout");
             FoodSaverApp.printDivider();
-            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "4", "0");
+            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "4", "5", "0");
             switch (ch) {
                 case "1" -> restaurantPostDonation(ctx, sc, restaurant);
                 case "2" -> restaurantViewHistory(restaurant);
                 case "3" -> restaurantEditPortions(sc, restaurant);
                 case "4" -> restaurantCancelDonation(ctx, sc, restaurant);
+                case "5" -> restaurantEditProfile(ctx, sc, restaurant);
                 case "0" -> {
                     restaurant.logout();
                     running = false;
                 }
             }
         }
+    }
+
+    private static void restaurantEditProfile(AppContext ctx, Scanner sc, Restaurant restaurant) {
+        if (restaurant.hasPendingEdit()) {
+            System.out.println("[!] Kamu sudah punya permintaan edit yang sedang menunggu persetujuan admin.");
+            System.out.println("    Tunggu hingga admin memproses permintaan sebelumnya.");
+            return;
+        }
+
+        FoodSaverApp.printHeader("EDIT PROFIL RESTORAN");
+        System.out.println("  Kosongkan field untuk mempertahankan nilai lama.\n");
+
+        System.out.printf("  Nama restoran saat ini   : %s%n", restaurant.getName());
+        System.out.printf("  Nama pemilik saat ini    : %s%n", restaurant.getOwnerName());
+        System.out.printf("  Alamat saat ini          : %s%n", restaurant.getAddress());
+        System.out.printf("  Koordinat saat ini       : %.4f, %.4f%n", restaurant.getLat(), restaurant.getLon());
+        System.out.printf("  Jenis makanan saat ini   : %s%n", restaurant.getFoodCategory());
+        System.out.printf("  No. HP saat ini          : %s%n", restaurant.getPhone());
+        System.out.println();
+
+        java.util.Map<String, String> newData = new java.util.HashMap<>();
+
+        System.out.print("  Nama restoran baru       : ");
+        String v = sc.nextLine().trim();
+        if (!v.isEmpty()) newData.put("name", v);
+
+        System.out.print("  Nama pemilik baru        : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) newData.put("owner", v);
+
+        System.out.print("  Alamat baru              : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) newData.put("address", v);
+
+        System.out.print("  Koordinat lat baru       : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) {
+            try { Double.parseDouble(v); newData.put("lat", v); }
+            catch (NumberFormatException e) { System.out.println("  [!] Lat tidak valid, dilewati."); }
+        }
+
+        System.out.print("  Koordinat lon baru       : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) {
+            try { Double.parseDouble(v); newData.put("lon", v); }
+            catch (NumberFormatException e) { System.out.println("  [!] Lon tidak valid, dilewati."); }
+        }
+
+        System.out.print("  Jenis makanan baru       : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) newData.put("category", v);
+
+        System.out.print("  No. HP baru              : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) newData.put("phone", v);
+
+        System.out.print("  Password baru (kosongkan jika tidak diubah): ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) {
+            if (v.length() < 6) System.out.println("  [!] Password min. 6 karakter, dilewati.");
+            else newData.put("password", v);
+        }
+
+        if (newData.isEmpty()) {
+            System.out.println("[!] Tidak ada perubahan yang dimasukkan.");
+            return;
+        }
+
+        EditRequest req = new EditRequest(restaurant, newData);
+        restaurant.setPendingEditRequest(req);
+        ctx.auditLog.log(restaurant.getUsername(), ActionType.EDIT_REQUEST,
+                restaurant.getUserId(), "Edit profile request: " + newData.keySet());
+        System.out.println("\n[✓] Permintaan edit profil telah dikirim. Menunggu persetujuan admin.");
+        System.out.println("    Field yang diminta diubah: " + newData.keySet());
     }
 
     private static void restaurantPostDonation(AppContext ctx, Scanner sc, Restaurant restaurant) {
@@ -441,13 +572,15 @@ public class Menu {
                     pending > 0 ? "   [ADA " + pending + " MENUNGGU]" : "");
             System.out.println("  [2] Riwayat penerimaan");
             System.out.println("  [3] Perbarui jumlah penghuni");
+            System.out.println("  [4] Edit profil panti");
             System.out.println("  [0] Logout");
             FoodSaverApp.printDivider();
-            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1","2","3","0");
+            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1","2","3","4","0");
             switch (ch) {
                 case "1" -> shelterConfirmDonation(ctx, sc, shelter);
                 case "2" -> shelterViewHistory(ctx, shelter);
                 case "3" -> shelterUpdateResidents(sc, shelter);
+                case "4" -> shelterEditProfile(ctx, sc, shelter);
                 case "0" -> { shelter.logout(); running = false; }
             }
         }
@@ -502,6 +635,101 @@ public class Menu {
         for (DeliveryOrder o : all)
             System.out.printf("  %s | Porsi: %3d | Rating: %d | Status: %s%n",
                     o.getOrderId(), o.getBundle().getTotalPortions(), o.getRating(), o.getStatus());
+    }
+
+    private static void shelterEditProfile(AppContext ctx, Scanner sc, Shelter shelter) {
+        if (shelter.hasPendingEdit()) {
+            System.out.println("[!] Kamu sudah punya permintaan edit yang sedang menunggu persetujuan admin.");
+            System.out.println("    Tunggu hingga admin memproses permintaan sebelumnya.");
+            return;
+        }
+
+        FoodSaverApp.printHeader("EDIT PROFIL PANTI");
+        System.out.println("  Kosongkan field untuk mempertahankan nilai lama.\n");
+
+        System.out.printf("  Nama panti saat ini      : %s%n", shelter.getName());
+        System.out.printf("  Nama pengurus saat ini   : %s%n", shelter.getManagerName());
+        System.out.printf("  Alamat saat ini          : %s%n", shelter.getAddress());
+        System.out.printf("  Koordinat saat ini       : %.4f, %.4f%n", shelter.getLat(), shelter.getLon());
+        System.out.printf("  Jumlah penghuni saat ini : %d%n", shelter.getResidents());
+        System.out.printf("  Tipe panti saat ini      : %s%n", shelter.getShelterType());
+        System.out.printf("  No. HP saat ini          : %s%n", shelter.getPhone());
+        System.out.println();
+
+        java.util.Map<String, String> newData = new java.util.HashMap<>();
+
+        System.out.print("  Nama panti baru          : ");
+        String v = sc.nextLine().trim();
+        if (!v.isEmpty()) newData.put("name", v);
+
+        System.out.print("  Nama pengurus baru       : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) newData.put("manager", v);
+
+        System.out.print("  Alamat baru              : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) newData.put("address", v);
+
+        System.out.print("  Koordinat lat baru       : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) {
+            try { Double.parseDouble(v); newData.put("lat", v); }
+            catch (NumberFormatException e) { System.out.println("  [!] Lat tidak valid, dilewati."); }
+        }
+
+        System.out.print("  Koordinat lon baru       : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) {
+            try { Double.parseDouble(v); newData.put("lon", v); }
+            catch (NumberFormatException e) { System.out.println("  [!] Lon tidak valid, dilewati."); }
+        }
+
+        System.out.print("  Jumlah penghuni baru     : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) {
+            try {
+                int n = Integer.parseInt(v);
+                if (n > 0) newData.put("residents", v);
+                else System.out.println("  [!] Harus > 0, dilewati.");
+            } catch (NumberFormatException e) { System.out.println("  [!] Bukan angka, dilewati."); }
+        }
+
+        System.out.println("  Tipe panti baru: [1] Anak Yatim  [2] Lansia  [3] Disabilitas  [Enter] Lewati");
+        System.out.print("  Pilihan: ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) {
+            String type = switch (v) {
+                case "2" -> "LANSIA";
+                case "3" -> "DISABILITAS";
+                case "1" -> "ANAK_YATIM";
+                default -> null;
+            };
+            if (type != null) newData.put("type", type);
+            else System.out.println("  [!] Pilihan tidak valid, dilewati.");
+        }
+
+        System.out.print("  No. HP baru              : ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) newData.put("phone", v);
+
+        System.out.print("  Password baru (kosongkan jika tidak diubah): ");
+        v = sc.nextLine().trim();
+        if (!v.isEmpty()) {
+            if (v.length() < 6) System.out.println("  [!] Password min. 6 karakter, dilewati.");
+            else newData.put("password", v);
+        }
+
+        if (newData.isEmpty()) {
+            System.out.println("[!] Tidak ada perubahan yang dimasukkan.");
+            return;
+        }
+
+        EditRequest req = new EditRequest(shelter, newData);
+        shelter.setPendingEditRequest(req);
+        ctx.auditLog.log(shelter.getUsername(), ActionType.EDIT_REQUEST,
+                shelter.getUserId(), "Edit profile request: " + newData.keySet());
+        System.out.println("\n[✓] Permintaan edit profil telah dikirim. Menunggu persetujuan admin.");
+        System.out.println("    Field yang diminta diubah: " + newData.keySet());
     }
 
     private static void shelterUpdateResidents(Scanner sc, Shelter shelter) {

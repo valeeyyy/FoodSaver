@@ -94,6 +94,12 @@ public class Restaurant extends User {
         return donations;
     }
 
+    public void setName(String name)             { this.name = name; }
+    public void setOwnerName(String ownerName)   { this.ownerName = ownerName; }
+    public void setLat(double lat)               { this.lat = lat; }
+    public void setLon(double lon)               { this.lon = lon; }
+    public void setFoodCategory(String cat)      { this.foodCategory = cat; }
+
     @Override
     public String toString() {
         return String.format("Restaurant{id='%s', name='%s', owner='%s', status=%s}",

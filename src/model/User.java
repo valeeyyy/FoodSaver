@@ -4,6 +4,7 @@ import enums.AccountStatus;
 import util.IdGenerator;
 
 import java.time.LocalDateTime;
+import model.EditRequest;
 
 public abstract class User {
 
@@ -93,5 +94,20 @@ public abstract class User {
 
     public void setVerified(boolean verified) {
         this.verified = verified;
+    }
+
+    private EditRequest pendingEditRequest = null;
+
+    public EditRequest getPendingEditRequest() {
+        return pendingEditRequest;
+    }
+
+    public void setPendingEditRequest(EditRequest req) {
+        this.pendingEditRequest = req;
+    }
+
+    public boolean hasPendingEdit() {
+        return pendingEditRequest != null
+                && pendingEditRequest.getStatus() == EditRequest.EditStatus.PENDING;
     }
 }

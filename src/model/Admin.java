@@ -8,9 +8,11 @@ import enums.AccountStatus;
 import enums.ActionType;
 import enums.DonationStatus;
 import enums.OrderStatus;
+import enums.ShelterType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 public class Admin extends User {
 
@@ -140,5 +142,54 @@ public class Admin extends User {
 
     public int getAdminLevel() {
         return adminLevel;
+    }
+
+    public List<User> viewPendingEdits() {
+        List<User> result = new ArrayList<>();
+        for (User u : userMap.values()) {
+            if (u.hasPendingEdit())
+                result.add(u);
+        }
+        return result;
+    }
+
+    public void applyEditRequest(User user, String decision, String notes) {
+        EditRequest req = user.getPendingEditRequest();
+        if (req == null) return;
+
+        if (decision.equalsIgnoreCase("APPROVED")) {
+            req.approve(notes);
+            Map<String, String> data = req.getNewData();
+
+            // apply common User fields
+            if (data.containsKey("phone"))   user.setPhone(data.get("phone"));
+            if (data.containsKey("address")) user.setAddress(data.get("address"));
+            if (data.containsKey("password")) user.setPassword(data.get("password"));
+
+            if (user instanceof Restaurant r) {
+                if (data.containsKey("name"))     r.setName(data.get("name"));
+                if (data.containsKey("owner"))    r.setOwnerName(data.get("owner"));
+                if (data.containsKey("lat"))      r.setLat(Double.parseDouble(data.get("lat")));
+                if (data.containsKey("lon"))      r.setLon(Double.parseDouble(data.get("lon")));
+                if (data.containsKey("category")) r.setFoodCategory(data.get("category"));
+            } else if (user instanceof Shelter s) {
+                if (data.containsKey("name"))      s.setName(data.get("name"));
+                if (data.containsKey("manager"))   s.setManagerName(data.get("manager"));
+                if (data.containsKey("lat"))       s.setLat(Double.parseDouble(data.get("lat")));
+                if (data.containsKey("lon"))       s.setLon(Double.parseDouble(data.get("lon")));
+                if (data.containsKey("residents")) s.setResidents(Integer.parseInt(data.get("residents")));
+                if (data.containsKey("type"))      s.setShelterType(ShelterType.valueOf(data.get("type")));
+            }
+
+            auditLog.log(username, ActionType.EDIT_APPROVED, user.getUserId(),
+                    "Edit approved: " + notes);
+            System.out.println("[✓] Perubahan data " + user.getUsername() + " telah disetujui dan diterapkan.");
+
+        } else if (decision.equalsIgnoreCase("REJECTED")) {
+            req.reject(notes);
+            auditLog.log(username, ActionType.EDIT_REJECTED, user.getUserId(),
+                    "Edit rejected: " + notes);
+            System.out.println("[✗] Perubahan data " + user.getUsername() + " ditolak.");
+        }
     }
 }
