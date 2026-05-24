@@ -19,6 +19,10 @@ public class AuditLog {
         entries.addFirst(new AuditEntry(actor, action, targetId, notes));
     }
 
+    public void log(AuditEntry entry) {
+        entries.addFirst(entry);
+    }
+
     public List<AuditEntry> filterByDonationId(String id) {
         List<AuditEntry> result = new ArrayList<>();
         for (AuditEntry e : entries) {

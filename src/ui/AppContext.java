@@ -51,8 +51,9 @@ public class AppContext {
             if (d.getStatus() == DonationStatus.EXPIRED_UNDELIVERED) {
                 d.markAsWasted();
                 toClean.add(d);
-                auditLog.log("SYSTEM", ActionType.STARTUP_CLEANUP,
-                        d.getDonationId(), "Dipindahkan ke history sebagai WASTED saat startup");
+                Notification notif = Notification.createStartupCleanup(d.getDonationId());
+                notif.display();
+                auditLog.log(notif.toAuditEntry());
             }
         }
         for (FoodDonation d : toClean) {

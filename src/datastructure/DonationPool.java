@@ -2,6 +2,7 @@ package datastructure;
 
 import engine.MatchingEngine;
 import model.FoodDonation;
+import model.Notification;
 import enums.ActionType;
 import enums.DonationStatus;
 import util.SystemConfig;
@@ -70,20 +71,19 @@ public class DonationPool {
             long remaining = d.getRemainingMinutes();
 
             if (d.isInBuffer()) {
-                System.out.printf("[RED ALERT] Donasi %s sisa %d menit — dikeluarkan dari antrian!%n",
-                        d.getDonationId(), remaining);
-                d.markAsExpired();
+                Notification red = Notification.createRedAlert(d.getDonationId());
+                red.display();
                 if (auditLog != null) {
-                    auditLog.log("SYSTEM", ActionType.RED_ALERT, d.getDonationId(),
-                            "Masuk buffer 30 menit, status EXPIRED_UNDELIVERED");
+                    auditLog.log(red.toAuditEntry());
                 }
+                d.markAsExpired();
 
             } else if (remaining <= yellowAlertMinutes && d.getStatus() == DonationStatus.WAITING) {
-                System.out.printf("[YELLOW ALERT] Donasi %s sisa %d menit — jalankan ulang matching (radius 8km)%n",
-                        d.getDonationId(), remaining);
+                // Fitur 3.2.5 - YELLOW ALERT: buat Notification, display(), lalu toAuditEntry()
+                Notification yellow = Notification.createYellowAlert(d.getDonationId());
+                yellow.display();
                 if (auditLog != null) {
-                    auditLog.log("SYSTEM", ActionType.YELLOW_ALERT, d.getDonationId(),
-                            "Sisa " + remaining + " menit, radius diperluas ke 8km");
+                    auditLog.log(yellow.toAuditEntry());
                 }
                 yellowFired = true;
             }
@@ -95,6 +95,7 @@ public class DonationPool {
             engine.runWithExpandedRadius();
         }
     }
+
 
     public List<FoodDonation> getAll() {
         return new ArrayList<>(queue);
