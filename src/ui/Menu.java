@@ -104,9 +104,10 @@ public class Menu {
             System.out.println("  [6] Cari restoran / donasi by nama");
             System.out.println("  [7] Filter order by status");
             System.out.println("  [8] Cari AuditLog by username");
+            System.out.println("  [9] Filter donasi by status (EXPIRED/WASTED)");
             System.out.println("  [0] Logout");
             FoodSaverApp.printDivider();
-            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "5", "6", "7", "8", "0");
+            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "5", "6", "7", "8", "9", "0");
             switch (ch) {
                 case "1" -> adminVerifyAccounts(ctx, sc, admin);
                 case "2" -> adminViewUnmatched(admin);
@@ -115,6 +116,7 @@ public class Menu {
                 case "6" -> adminSearchByName(ctx, sc, admin);
                 case "7" -> adminFilterOrdersByStatus(ctx, sc, admin);
                 case "8" -> adminFilterAuditByActor(ctx, sc, admin);
+                case "9" -> adminFilterDonationByStatus(ctx, sc, admin);
                 case "0" -> {
                     admin.logout();
                     running = false;
@@ -281,6 +283,33 @@ public class Menu {
         }
         FoodSaverApp.printHeader("AUDIT LOG — " + username);
         results.forEach(System.out::println);
+    }
+
+    private static void adminFilterDonationByStatus(AppContext ctx, Scanner sc, Admin admin) {
+        FoodSaverApp.printHeader("FILTER DONASI BERDASARKAN STATUS");
+        System.out.println("  [1] EXPIRED_UNDELIVERED");
+        System.out.println("  [2] WASTED");
+        System.out.println("  [0] Kembali");
+        FoodSaverApp.printDivider();
+        String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "0");
+        if (ch.equals("0"))
+            return;
+
+        DonationStatus status = switch (ch) {
+            case "2" -> DonationStatus.WASTED;
+            default -> DonationStatus.EXPIRED_UNDELIVERED;
+        };
+
+        List<FoodDonation> results = admin.filterDonationByStatus(status);
+        if (results.isEmpty()) {
+            System.out.println("[!] Tidak ada donasi dengan status " + status + ".");
+            return;
+        }
+        FoodSaverApp.printHeader("DONASI — " + status);
+        for (FoodDonation d : results)
+            System.out.printf("  %s | %-20s | %3d porsi | dari: %s%n",
+                    d.getDonationId(), d.getFoodName(),
+                    d.getPortions(), d.getRestaurant().getName());
     }
 
     public static void showRestaurant(AppContext ctx, Scanner sc, Restaurant restaurant) {

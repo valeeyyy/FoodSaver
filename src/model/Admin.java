@@ -81,6 +81,25 @@ public class Admin extends User {
         return result;
     }
 
+    public List<FoodDonation> filterDonationByStatus(DonationStatus status) {
+        List<FoodDonation> result = new ArrayList<>();
+        for (FoodDonation d : pool.getAll()) {
+            if (d.getStatus() == status)
+                result.add(d);
+        }
+        for (DeliveryOrder o : history.getAll()) {
+            for (FoodDonation d : o.getBundle().getDonations()) {
+                if (d.getStatus() == status)
+                    result.add(d);
+            }
+        }
+        for (FoodDonation d : history.getWastedHistory()) {
+            if (d.getStatus() == status)
+                result.add(d);
+        }
+        return result;
+    }
+
     public Shelter searchShelterById(String id) {
         return registry.findById(id);
     }
