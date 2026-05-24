@@ -29,7 +29,7 @@ public class FoodSaverApp {
 
     private static void printMainMenu() {
         System.out.println("\n╔══════════════════════════════════════╗");
-        System.out.println("║         🍱  F O O D S A V E R         ║");
+        System.out.println("║         🍱  F O O D S A V E R        ║");
         System.out.println("║   Distribusi Surplus Pangan Otomatis ║");
         System.out.println("╠══════════════════════════════════════╣");
         System.out.println("║  [1] Login                           ║");
@@ -38,10 +38,6 @@ public class FoodSaverApp {
         System.out.println("╚══════════════════════════════════════╝");
     }
 
-    /**
-     * Fitur 3.2.2 — Alur login menggunakan HashMap O(1) via ctx.findUser().
-     * Sistem menolak login jika akun REJECTED, menampilkan notifikasi jika PENDING.
-     */
     private static void loginFlow(Scanner sc, AppContext ctx) {
         printHeader("LOGIN");
         String username = readNonEmpty(sc, "Username : ");

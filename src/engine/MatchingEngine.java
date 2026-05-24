@@ -183,6 +183,7 @@ public class MatchingEngine implements Notifiable {
         System.out.println("\n=== DELIVERY ORDER DIBUAT ===");
         System.out.println("  ID Order  : " + order.getOrderId());
         System.out.println("  Tujuan    : " + winner.getShelter().getName());
+        System.out.printf("  Jarak     : %.2f km dari restoran ke panti%n", winner.getTotalRouteKm());
         System.out.printf("  Estimasi  : %.0f menit%n", arrivalMs / 60000.0);
         System.out.println("  Surplus   : " + Math.max(0, surplus) + " porsi");
         System.out.println("  Status    : WAITING_PICKUP");
