@@ -34,6 +34,7 @@ public class AppContext {
         pool = new DonationPool(auditLog);
         engine = new MatchingEngine(pool, registry, expiryTree, history, auditLog);
         pool.setEngine(engine);
+        pool.setHistory(history);
 
         admin = new Admin("admin", "admin123", pool, registry, history, auditLog, userMap);
         userMap.put(admin.getUsername(), admin);
@@ -48,7 +49,8 @@ public class AppContext {
 
         List<FoodDonation> toClean = new ArrayList<>();
         for (FoodDonation d : pool.getAll()) {
-            if (d.getStatus() == DonationStatus.EXPIRED_UNDELIVERED) {
+            if (d.getStatus() == DonationStatus.EXPIRED_UNDELIVERED
+                    || (d.getStatus() == DonationStatus.WAITING && !d.isStillFresh())) {
                 d.markAsWasted();
                 toClean.add(d);
                 Notification notif = Notification.createStartupCleanup(d.getDonationId());

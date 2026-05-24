@@ -100,6 +100,7 @@ public class Menu {
     public static void showAdmin(AppContext ctx, Scanner sc, Admin admin) {
         boolean running = true;
         while (running) {
+            ctx.pool.checkAlerts();
             FoodSaverApp.printHeader("MENU ADMIN — " + admin.getUsername());
             System.out.println("  [1] Lihat & verifikasi akun pending");
             System.out.println("  [2] Donasi tidak tersalurkan");
@@ -111,21 +112,23 @@ public class Menu {
             System.out.println("  [8] Cari AuditLog by username");
             System.out.println("  [9] Filter donasi by status (EXPIRED/WASTED)");
             System.out.println("  [10] Review permintaan edit profil");
+            System.out.println("  [11] Status alert aktif");
             System.out.println("  [0] Logout");
             FoodSaverApp.printDivider();
             String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ",
-                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "0");
+                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "0");
             switch (ch) {
                 case "1"  -> adminVerifyAccounts(ctx, sc, admin);
                 case "2"  -> adminViewUnmatched(admin);
                 case "3"  -> adminViewActiveDonations(admin, ctx);
-                case "4"  -> {}
+                case "4"  -> adminViewAuditLog(ctx, sc, admin);
                 case "5"  -> adminSearchShelter(sc, admin);
                 case "6"  -> adminSearchByName(ctx, sc, admin);
                 case "7"  -> adminFilterOrdersByStatus(ctx, sc, admin);
                 case "8"  -> adminFilterAuditByActor(ctx, sc, admin);
                 case "9"  -> adminFilterDonationByStatus(ctx, sc, admin);
                 case "10" -> adminReviewEditRequests(ctx, sc, admin);
+                case "11" -> adminViewActiveAlerts(ctx);
                 case "0"  -> {
                     admin.logout();
                     running = false;
@@ -303,6 +306,27 @@ public class Menu {
                     o.getBundle().getTotalPortions(), o.getRating());
     }
 
+    private static void adminViewAuditLog(AppContext ctx, Scanner sc, Admin admin) {
+        FoodSaverApp.printHeader("AUDIT LOG");
+        System.out.println("  [1] Semua entri");
+        System.out.println("  [2] Hanya ALERT & EXPIRED & WASTED");
+        System.out.println("  [0] Kembali");
+        FoodSaverApp.printDivider();
+        String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "0");
+        if (ch.equals("0")) return;
+
+        List<AuditEntry> entries = ch.equals("2")
+                ? ctx.auditLog.filterExpiredAndWasted()
+                : ctx.auditLog.getAll();
+
+        if (entries.isEmpty()) {
+            System.out.println("[!] Tidak ada entri audit.");
+            return;
+        }
+        FoodSaverApp.printHeader("AUDIT LOG" + (ch.equals("2") ? " — ALERT/EXPIRED/WASTED" : " — SEMUA"));
+        entries.forEach(System.out::println);
+    }
+
     private static void adminFilterAuditByActor(AppContext ctx, Scanner sc, Admin admin) {
         String username = FoodSaverApp.readNonEmpty(sc, "Masukkan username yang ingin dicari: ");
         List<AuditEntry> results = admin.filterAuditLogByActor(username);
@@ -339,6 +363,49 @@ public class Menu {
             System.out.printf("  %s | %-20s | %3d porsi | dari: %s%n",
                     d.getDonationId(), d.getFoodName(),
                     d.getPortions(), d.getRestaurant().getName());
+    }
+
+    private static void adminViewActiveAlerts(AppContext ctx) {
+        FoodSaverApp.printHeader("STATUS ALERT AKTIF");
+
+        List<model.FoodDonation> allDonations = ctx.pool.getAll();
+
+        List<model.FoodDonation> redAlerts = new java.util.ArrayList<>();
+        List<model.FoodDonation> yellowAlerts = new java.util.ArrayList<>();
+
+        for (model.FoodDonation d : allDonations) {
+            if (d.isInBuffer()) {
+                redAlerts.add(d);
+            } else if (d.getRemainingMinutes() <= util.SystemConfig.YELLOW_ALERT_MINUTES
+                    && d.getStatus() == enums.DonationStatus.WAITING) {
+                yellowAlerts.add(d);
+            }
+        }
+
+        if (redAlerts.isEmpty() && yellowAlerts.isEmpty()) {
+            System.out.println("  [✓] Tidak ada alert aktif saat ini.");
+            return;
+        }
+
+        if (!redAlerts.isEmpty()) {
+            System.out.println("\n  🔴 RED ALERT — donasi dalam buffer 30 menit terakhir:");
+            for (model.FoodDonation d : redAlerts) {
+                System.out.printf("    %s | %-20s | sisa ~%d menit | expired: %s%n",
+                        d.getDonationId(), d.getFoodName(),
+                        d.getRemainingMinutes(),
+                        d.getExpiredAt().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
+            }
+        }
+
+        if (!yellowAlerts.isEmpty()) {
+            System.out.println("\n  🟡 YELLOW ALERT — donasi < 2 jam sebelum expired:");
+            for (model.FoodDonation d : yellowAlerts) {
+                System.out.printf("    %s | %-20s | sisa ~%d menit | expired: %s%n",
+                        d.getDonationId(), d.getFoodName(),
+                        d.getRemainingMinutes(),
+                        d.getExpiredAt().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
+            }
+        }
     }
 
     private static void adminReviewEditRequests(AppContext ctx, Scanner sc, Admin admin) {

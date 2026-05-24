@@ -11,12 +11,13 @@ import java.util.List;
 public class DeliveryHistory {
 
     private final LinkedList<DeliveryOrder> history;
-
     private final LinkedList<FoodDonation> wastedHistory;
+    private final LinkedList<FoodDonation> expiredHistory; // red alert sesi ini
 
     public DeliveryHistory() {
         this.history = new LinkedList<>();
         this.wastedHistory = new LinkedList<>();
+        this.expiredHistory = new LinkedList<>();
     }
 
     public void addFirst(DeliveryOrder order) {
@@ -25,6 +26,10 @@ public class DeliveryHistory {
 
     public void addWasted(FoodDonation d) {
         wastedHistory.addFirst(d);
+    }
+
+    public void addExpired(FoodDonation d) {
+        expiredHistory.addFirst(d);
     }
 
     public DeliveryOrder getLatest() {
@@ -68,5 +73,9 @@ public class DeliveryHistory {
 
     public List<FoodDonation> getWastedHistory() {
         return new ArrayList<>(wastedHistory);
+    }
+
+    public List<FoodDonation> getExpiredHistory() {
+        return new ArrayList<>(expiredHistory);
     }
 }

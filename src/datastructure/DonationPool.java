@@ -17,6 +17,7 @@ public class DonationPool {
 
     private AuditLog auditLog;
     private MatchingEngine engine;
+    private DeliveryHistory history;
 
     public DonationPool(AuditLog auditLog) {
         this.queue = new LinkedList<>();
@@ -27,6 +28,10 @@ public class DonationPool {
 
     public void setEngine(MatchingEngine engine) {
         this.engine = engine;
+    }
+
+    public void setHistory(DeliveryHistory history) {
+        this.history = history;
     }
 
     public void enqueue(FoodDonation d) {
@@ -66,6 +71,7 @@ public class DonationPool {
 
     public void checkAlerts() {
         boolean yellowFired = false;
+        List<FoodDonation> toExpire = new ArrayList<>();
 
         for (FoodDonation d : queue) {
             long remaining = d.getRemainingMinutes();
@@ -77,6 +83,7 @@ public class DonationPool {
                     auditLog.log(red.toAuditEntry());
                 }
                 d.markAsExpired();
+                toExpire.add(d);
 
             } else if (remaining <= yellowAlertMinutes && d.getStatus() == DonationStatus.WAITING) {
                 Notification yellow = Notification.createYellowAlert(d.getDonationId());
@@ -88,7 +95,12 @@ public class DonationPool {
             }
         }
 
-        queue.removeIf(d -> d.getStatus() == DonationStatus.EXPIRED_UNDELIVERED);
+        for (FoodDonation d : toExpire) {
+            queue.remove(d);
+            if (history != null) {
+                history.addExpired(d);
+            }
+        }
 
         if (yellowFired && engine != null) {
             engine.runWithExpandedRadius();

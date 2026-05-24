@@ -89,12 +89,19 @@ public class Admin extends User {
             if (d.getStatus() == status)
                 result.add(d);
         }
+
         for (DeliveryOrder o : history.getAll()) {
             for (FoodDonation d : o.getBundle().getDonations()) {
                 if (d.getStatus() == status)
                     result.add(d);
             }
         }
+       
+        for (FoodDonation d : history.getExpiredHistory()) {
+            if (d.getStatus() == status)
+                result.add(d);
+        }
+
         for (FoodDonation d : history.getWastedHistory()) {
             if (d.getStatus() == status)
                 result.add(d);

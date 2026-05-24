@@ -45,7 +45,9 @@ public class AuditLog {
         List<AuditEntry> result = new ArrayList<>();
         for (AuditEntry e : entries) {
             if (e.getActionType() == ActionType.EXPIRE
-                    || e.getActionType() == ActionType.WASTED)
+                    || e.getActionType() == ActionType.WASTED
+                    || e.getActionType() == ActionType.RED_ALERT
+                    || e.getActionType() == ActionType.YELLOW_ALERT)
                 result.add(e);
         }
         return result;
