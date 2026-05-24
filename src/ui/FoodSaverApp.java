@@ -69,8 +69,6 @@ public class FoodSaverApp {
             System.out.println("[✗] Jenis pengguna tidak dikenali.");
     }
 
-    // ── Input helpers ────────────────────────────────────────────────────────
-
     public static String readNonEmpty(Scanner sc, String prompt) {
         while (true) {
             System.out.print(prompt);
