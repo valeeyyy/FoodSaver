@@ -2,7 +2,6 @@ package model;
 
 import enums.DonationStatus;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import util.IdGenerator;
 import util.SystemConfig;
 
@@ -41,7 +40,9 @@ public class FoodDonation {
     }
 
     public long getRemainingMinutes() {
-        return ChronoUnit.MINUTES.between(LocalDateTime.now(), expiredAt);
+        LocalDateTime now = LocalDateTime.now();
+        java.time.Duration diff = java.time.Duration.between(now, expiredAt);
+        return diff.getSeconds() / 60;
     }
 
     public void markAsMatched() {
