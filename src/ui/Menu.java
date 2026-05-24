@@ -3,7 +3,6 @@ package ui;
 import enums.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import model.*;
@@ -96,7 +95,6 @@ public class Menu {
     public static void showAdmin(AppContext ctx, Scanner sc, Admin admin) {
         boolean running = true;
         while (running) {
-            admin.viewDashboard(); // Fitur 3.2.5 — tampilkan alert aktif
             FoodSaverApp.printHeader("MENU ADMIN — " + admin.getUsername());
             System.out.println("  [1] Lihat & verifikasi akun pending");
             System.out.println("  [2] Donasi tidak tersalurkan");
@@ -108,12 +106,11 @@ public class Menu {
             System.out.println("  [8] Cari AuditLog by username");
             System.out.println("  [0] Logout");
             FoodSaverApp.printDivider();
-            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "4", "5", "6", "7", "8", "0");
+            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "5", "6", "7", "8", "0");
             switch (ch) {
                 case "1" -> adminVerifyAccounts(ctx, sc, admin);
                 case "2" -> adminViewUnmatched(admin);
                 case "3" -> adminViewActiveDonations(admin);
-                case "4" -> adminViewAuditLog(ctx, sc);
                 case "5" -> adminSearchShelter(sc, admin);
                 case "6" -> adminSearchByName(ctx, sc, admin);
                 case "7" -> adminFilterOrdersByStatus(ctx, sc, admin);
@@ -192,27 +189,6 @@ public class Menu {
             System.out.printf("  %s | %-20s | %3d porsi | expired: %s | sisa: %d mnt%n",
                     d.getDonationId(), d.getFoodName(), d.getPortions(),
                     d.getExpiredAt().format(TM_FMT), d.getRemainingMinutes());
-    }
-
-    private static void adminViewAuditLog(AppContext ctx, Scanner sc) {
-        FoodSaverApp.printHeader("AUDIT LOG");
-        System.out.println("  [1] Semua entri");
-        System.out.println("  [2] Filter berdasarkan donation ID");
-        System.out.println("  [3] Hanya EXPIRED dan WASTED");
-        String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3");
-        List<AuditEntry> entries = switch (ch) {
-            case "2" -> {
-                String id = FoodSaverApp.readNonEmpty(sc, "Masukkan donation ID: ");
-                yield ctx.auditLog.filterByDonationId(id);
-            }
-            case "3" -> ctx.auditLog.filterExpiredAndWasted();
-            default -> ctx.auditLog.getAll();
-        };
-        if (entries.isEmpty()) {
-            System.out.println("[!] Tidak ada entri.");
-            return;
-        }
-        entries.forEach(System.out::println);
     }
 
     private static void adminSearchShelter(Scanner sc, Admin admin) {
@@ -404,17 +380,12 @@ public class Menu {
     public static void showShelter(AppContext ctx, Scanner sc, Shelter shelter) {
         boolean running = true;
         while (running) {
-            long pending = getShelterIncomingOrders(ctx, shelter).size();
-            FoodSaverApp.printHeader("MENU PANTI — " + shelter.getName());
-            System.out.printf("  [1] Konfirmasi donasi masuk%s%n",
-                    pending > 0 ? "   [ADA " + pending + " MENUNGGU]" : "");
             System.out.println("  [2] Riwayat penerimaan");
             System.out.println("  [3] Perbarui jumlah penghuni");
             System.out.println("  [0] Logout");
             FoodSaverApp.printDivider();
-            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "0");
+            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "2", "3", "0");
             switch (ch) {
-                case "1" -> shelterConfirmDonation(ctx, sc, shelter);
                 case "2" -> shelterViewHistory(ctx, shelter);
                 case "3" -> shelterUpdateResidents(sc, shelter);
                 case "0" -> {
@@ -423,57 +394,6 @@ public class Menu {
                 }
             }
         }
-    }
-
-    private static List<DeliveryOrder> getShelterIncomingOrders(AppContext ctx, Shelter shelter) {
-        List<DeliveryOrder> result = new ArrayList<>();
-        for (DeliveryOrder o : ctx.history.getAll()) {
-            if (!o.getShelter().getUserId().equals(shelter.getUserId()))
-                continue;
-            if (o.getStatus() == OrderStatus.IN_TRANSIT
-                    || o.getStatus() == OrderStatus.WAITING_PICKUP
-                    || o.getStatus() == OrderStatus.PICKED_UP) {
-                result.add(o);
-            }
-        }
-        return result;
-    }
-
-    private static void shelterConfirmDonation(AppContext ctx, Scanner sc, Shelter shelter) {
-        List<DeliveryOrder> incoming = getShelterIncomingOrders(ctx, shelter);
-        if (incoming.isEmpty()) {
-            System.out.println("[!] Tidak ada donasi yang menunggu konfirmasi.");
-            return;
-        }
-
-        FoodSaverApp.printHeader("KONFIRMASI PENERIMAAN");
-        for (int i = 0; i < incoming.size(); i++) {
-            DeliveryOrder o = incoming.get(i);
-            System.out.printf("[%d] Order: %s%n    Dari   : ", i + 1, o.getOrderId());
-            for (Restaurant r : o.getBundle().getRestaurantList())
-                System.out.print(r.getName() + " ");
-            System.out.printf("%n    Porsi  : %d%n    Status : %s%n",
-                    o.getBundle().getTotalPortions(), o.getStatus());
-        }
-
-        int choice = FoodSaverApp.readIndexOrCancel(sc, "Pilih nomor order (0=batal): ", incoming.size());
-        if (choice == 0)
-            return;
-
-        DeliveryOrder order = incoming.get(choice - 1);
-        if (!FoodSaverApp.readYesNo(sc, "\nKonfirmasi diterima? [Y/N]: ")) {
-            System.out.println("[!] Konfirmasi dibatalkan.");
-            return;
-        }
-
-        int rating = FoodSaverApp.readIntInRange(sc, "Rating donasi (1–5)        : ", 1, 5);
-        System.out.print("Catatan                    : ");
-        String notes = sc.nextLine();
-
-        shelter.confirmReceipt(order, rating, notes);
-        ctx.auditLog.log(shelter.getUsername(), ActionType.DELIVER,
-                order.getOrderId(), "Confirmed by shelter. Rating: " + rating);
-        System.out.println("[✓] Penerimaan dikonfirmasi. Status order: DELIVERED");
     }
 
     private static void shelterViewHistory(AppContext ctx, Shelter shelter) {

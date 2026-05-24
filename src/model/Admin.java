@@ -37,30 +37,6 @@ public class Admin extends User {
         this.userMap = userMap;
     }
 
-    public void viewDashboard() {
-        System.out.println("\n╔══════════════════════════════════════╗");
-        System.out.println("║       DASHBOARD ADMIN — FoodSaver    ║");
-        System.out.println("╚══════════════════════════════════════╝");
-
-        boolean hasAlert = false;
-        for (FoodDonation d : pool.getAll()) {
-            long remaining = d.getRemainingMinutes();
-            if (d.isInBuffer()) {
-                System.out.println("[🔴 RED ALERT] Donasi " + d.getDonationId()
-                        + " (Sisa: " + remaining + " mnt)");
-                hasAlert = true;
-            } else if (remaining <= 120 && d.getStatus() == DonationStatus.WAITING) {
-                System.out.println("[🟡 YELLOW ALERT] Donasi " + d.getDonationId()
-                        + " (Sisa: " + remaining + " mnt)");
-                hasAlert = true;
-            }
-        }
-        if (!hasAlert) {
-            System.out.println("[✓] Tidak ada alert. Sistem berjalan normal.");
-        }
-        System.out.println();
-    }
-
     public void verifyAccount(User user, String decision, String notes) {
         switch (decision.toUpperCase()) {
             case "APPROVED" -> {
