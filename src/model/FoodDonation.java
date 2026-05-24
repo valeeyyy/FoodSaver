@@ -2,7 +2,6 @@ package model;
 
 import enums.DonationStatus;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import util.IdGenerator;
 import util.SystemConfig;
 
