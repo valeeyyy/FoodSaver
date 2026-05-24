@@ -121,7 +121,7 @@ public class Menu {
                 case "5" -> adminSearchShelter(sc, admin);
                 case "6" -> adminSearchByName(ctx, sc, admin);
                 case "7" -> adminFilterOrdersByStatus(ctx, sc, admin);
-                case "8" -> {}
+                case "8" -> adminFilterAuditByActor(ctx, sc, admin);
                 case "9" -> adminFilterDonationByStatus(ctx, sc, admin);
                 case "0" -> {
                     admin.logout();
