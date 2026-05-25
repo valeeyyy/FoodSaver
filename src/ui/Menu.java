@@ -112,11 +112,10 @@ public class Menu {
             System.out.println("  [8] Cari AuditLog by username");
             System.out.println("  [9] Filter donasi by status (EXPIRED/WASTED)");
             System.out.println("  [10] Review permintaan edit profil");
-            System.out.println("  [11] Status alert aktif");
             System.out.println("  [0] Logout");
             FoodSaverApp.printDivider();
             String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ",
-                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "0");
+                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "0");
             switch (ch) {
                 case "1"  -> adminVerifyAccounts(ctx, sc, admin);
                 case "2"  -> adminViewUnmatched(admin);
@@ -128,7 +127,6 @@ public class Menu {
                 case "8"  -> adminFilterAuditByActor(ctx, sc, admin);
                 case "9"  -> adminFilterDonationByStatus(ctx, sc, admin);
                 case "10" -> adminReviewEditRequests(ctx, sc, admin);
-                case "11" -> adminViewActiveAlerts(ctx);
                 case "0"  -> {
                     admin.logout();
                     running = false;
