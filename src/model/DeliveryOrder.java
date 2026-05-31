@@ -1,6 +1,7 @@
 package model;
 
 import enums.ActionType;
+import enums.DonationStatus;
 import enums.OrderStatus;
 import util.IdGenerator;
 
@@ -43,27 +44,47 @@ public class DeliveryOrder {
 
     public void advanceStatus() {
         switch (status) {
-            case WAITING_PICKUP -> status = OrderStatus.PICKED_UP;
-            case PICKED_UP -> status = OrderStatus.IN_TRANSIT;
-            case IN_TRANSIT -> status = OrderStatus.DELIVERED;
-            default -> System.out.println("[!] Status sudah final: " + status);
+            case WAITING_PICKUP -> {
+                status = OrderStatus.PICKED_UP;
+                statusTimeline.add(LocalDateTime.now().format(FMT) + " → PICKED_UP");
+                System.out.println("[✓] Status diperbarui: PICKED_UP");
+            }
+            case PICKED_UP -> {
+                status = OrderStatus.IN_TRANSIT;
+                statusTimeline.add(LocalDateTime.now().format(FMT) + " → IN_TRANSIT");
+                System.out.println("[✓] Status diperbarui: IN_TRANSIT");
+                checkBundleFreshness();
+            }
+            default -> System.out.println("[!] Status sudah pada tahap akhir atau menunggu konfirmasi panti.");
         }
-        statusTimeline.add("[" + LocalDateTime.now().format(FMT) + "] " + status);
     }
 
     public void confirmDelivery(int rating, String notes) {
-        this.status = OrderStatus.DELIVERED;
         this.rating = rating;
         this.receiptNotes = notes;
-        statusTimeline.add("[" + LocalDateTime.now().format(FMT) + "] DELIVERED");
-        shelter.addPortionsToday(bundle.getTotalPortions() - portionSurplus);
+        this.status = OrderStatus.DELIVERED;
+        statusTimeline.add(LocalDateTime.now().format(FMT) + " → DELIVERED (confirmed)");
+
+        for (FoodDonation d : bundle.getDonations()) {
+            if (d.getStatus() != DonationStatus.WASTED) {
+                d.markAsDelivered();
+            }
+        }
     }
 
     public void markPartialWasted(FoodDonation wastedDonation) {
         wastedDonation.markAsWasted();
-        portionSurplus += wastedDonation.getPortions();
-        System.out.printf("[!] Donasi %s WASTED saat pengiriman — porsi dikurangi %d.%n",
+        portionSurplus = Math.max(0, portionSurplus - wastedDonation.getPortions());
+        System.out.printf("[!] Donasi %s EXPIRED saat IN_TRANSIT — ditandai WASTED, porsi dikurangi %d.%n",
                 wastedDonation.getDonationId(), wastedDonation.getPortions());
+    }
+
+    private void checkBundleFreshness() {
+        for (FoodDonation d : bundle.getDonations()) {
+            if (!d.isStillFresh()) {
+                markPartialWasted(d);
+            }
+        }
     }
 
     public List<String> getStatusTimeline() {

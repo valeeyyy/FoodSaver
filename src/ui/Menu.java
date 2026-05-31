@@ -112,22 +112,24 @@ public class Menu {
             System.out.println("  [8] Cari AuditLog by username");
             System.out.println("  [9] Filter donasi by status (EXPIRED/WASTED)");
             System.out.println("  [10] Review permintaan edit profil");
+            System.out.println("  [11] Update status pengiriman (kurir)");
             System.out.println("  [0] Logout");
             FoodSaverApp.printDivider();
             String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ",
-                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "0");
+                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "0");
             switch (ch) {
-                case "1"  -> adminVerifyAccounts(ctx, sc, admin);
-                case "2"  -> adminViewUnmatched(admin);
-                case "3"  -> adminViewActiveDonations(admin, ctx);
-                case "4"  -> adminViewAuditLog(ctx, sc, admin);
-                case "5"  -> adminSearchShelter(sc, admin);
-                case "6"  -> adminSearchByName(ctx, sc, admin);
-                case "7"  -> adminFilterOrdersByStatus(ctx, sc, admin);
-                case "8"  -> adminFilterAuditByActor(ctx, sc, admin);
-                case "9"  -> adminFilterDonationByStatus(ctx, sc, admin);
+                case "1" -> adminVerifyAccounts(ctx, sc, admin);
+                case "2" -> adminViewUnmatched(admin);
+                case "3" -> adminViewActiveDonations(admin, ctx);
+                case "4" -> adminViewAuditLog(ctx, sc, admin);
+                case "5" -> adminSearchShelter(sc, admin);
+                case "6" -> adminSearchByName(ctx, sc, admin);
+                case "7" -> adminFilterOrdersByStatus(ctx, sc, admin);
+                case "8" -> adminFilterAuditByActor(ctx, sc, admin);
+                case "9" -> adminFilterDonationByStatus(ctx, sc, admin);
                 case "10" -> adminReviewEditRequests(ctx, sc, admin);
-                case "0"  -> {
+                case "11" -> adminUpdateDelivery(ctx, sc);
+                case "0" -> {
                     admin.logout();
                     running = false;
                 }
@@ -208,7 +210,8 @@ public class Menu {
 
             if (r != null && !shelters.isEmpty()) {
                 System.out.println("    Jarak ke panti (referensi prioritas):");
-                record ShelterDist(Shelter shelter, double km) {}
+                record ShelterDist(Shelter shelter, double km) {
+                }
                 List<ShelterDist> jarakList = new ArrayList<>();
                 for (Shelter s : shelters) {
                     double km = GeoUtils.euclideanKm(r.getLat(), r.getLon(),
@@ -308,10 +311,24 @@ public class Menu {
         FoodSaverApp.printHeader("AUDIT LOG");
         System.out.println("  [1] Semua entri");
         System.out.println("  [2] Hanya ALERT & EXPIRED & WASTED");
+        System.out.println("  [3] Telusuri lifecycle satu donasi (by ID)");
         System.out.println("  [0] Kembali");
         FoodSaverApp.printDivider();
-        String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "0");
-        if (ch.equals("0")) return;
+        String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "0");
+        if (ch.equals("0"))
+            return;
+
+        if (ch.equals("3")) {
+            String donationId = FoodSaverApp.readNonEmpty(sc, "Masukkan ID donasi: ");
+            List<AuditEntry> trace = ctx.auditLog.traceDonationLifecycle(donationId);
+            if (trace.isEmpty()) {
+                System.out.println("[!] Tidak ada riwayat untuk donasi ID: " + donationId);
+                return;
+            }
+            FoodSaverApp.printHeader("LIFECYCLE DONASI — " + donationId);
+            trace.forEach(System.out::println);
+            return;
+        }
 
         List<AuditEntry> entries = ch.equals("2")
                 ? ctx.auditLog.filterExpiredAndWasted()
@@ -424,18 +441,18 @@ public class Menu {
             System.out.println("    Perubahan yang diminta:");
             req.getNewData().forEach((k, v) -> {
                 String label = switch (k) {
-                    case "name"      -> "Nama";
-                    case "owner"     -> "Nama pemilik";
-                    case "manager"   -> "Nama pengurus";
-                    case "address"   -> "Alamat";
-                    case "lat"       -> "Koordinat lat";
-                    case "lon"       -> "Koordinat lon";
-                    case "category"  -> "Jenis makanan";
+                    case "name" -> "Nama";
+                    case "owner" -> "Nama pemilik";
+                    case "manager" -> "Nama pengurus";
+                    case "address" -> "Alamat";
+                    case "lat" -> "Koordinat lat";
+                    case "lon" -> "Koordinat lon";
+                    case "category" -> "Jenis makanan";
                     case "residents" -> "Jumlah penghuni";
-                    case "type"      -> "Tipe panti";
-                    case "phone"     -> "No. HP";
-                    case "password"  -> "Password";
-                    default          -> k;
+                    case "type" -> "Tipe panti";
+                    case "phone" -> "No. HP";
+                    case "password" -> "Password";
+                    default -> k;
                 };
                 String display = k.equals("password") ? "****" : v;
                 System.out.printf("      - %s: %s%n", label, display);
@@ -444,18 +461,85 @@ public class Menu {
         }
 
         int choice = FoodSaverApp.readIndexOrCancel(sc, "Pilih nomor (0=kembali): ", pending.size());
-        if (choice == 0) return;
+        if (choice == 0)
+            return;
 
         User target = pending.get(choice - 1);
         System.out.println("\n=== REVIEW PERMINTAAN EDIT ===");
         System.out.println("Panduan: Verifikasi data baru sebelum menyetujui.");
         String decision = FoodSaverApp.readMenuChoice(sc,
                 "Keputusan [APPROVED/REJECTED/SKIP]: ", "APPROVED", "REJECTED", "SKIP");
-        if (decision.equals("SKIP")) return;
+        if (decision.equals("SKIP"))
+            return;
 
         System.out.print("Catatan (opsional): ");
         String notes = sc.nextLine();
         admin.applyEditRequest(target, decision, notes);
+    }
+
+    private static void adminUpdateDelivery(AppContext ctx, Scanner sc) {
+        List<DeliveryOrder> orders = ctx.history.getAll();
+        if (orders.isEmpty()) {
+            System.out.println("[!] Belum ada order.");
+            return;
+        }
+
+        FoodSaverApp.printHeader("UPDATE STATUS PENGIRIMAN");
+        List<DeliveryOrder> active = new ArrayList<>();
+        for (DeliveryOrder o : orders) {
+            if (o.getStatus() != OrderStatus.DELIVERED && o.getStatus() != OrderStatus.CANCELLED) {
+                active.add(o);
+            }
+        }
+        if (active.isEmpty()) {
+            System.out.println("[!] Tidak ada order yang aktif.");
+            return;
+        }
+
+        for (int i = 0; i < active.size(); i++) {
+            DeliveryOrder o = active.get(i);
+            System.out.printf("[%d] %s | Panti: %-20s | Status: %s%n",
+                    i + 1, o.getOrderId(), o.getShelter().getName(), o.getStatus());
+        }
+
+        int choice = FoodSaverApp.readIndexOrCancel(sc, "Pilih nomor order (0=batal): ", active.size());
+        if (choice == 0)
+            return;
+
+        DeliveryOrder order = active.get(choice - 1);
+        System.out.println("Status saat ini : " + order.getStatus());
+        System.out.println("Status berikutnya: " + nextStatus(order.getStatus()));
+
+        if (FoodSaverApp.readYesNo(sc, "Maju ke status berikutnya? [Y/N]: ")) {
+            order.advanceStatus();
+            ctx.auditLog.log("ADMIN", ActionType.STATUS_UPDATE,
+                    order.getOrderId(), "Status -> " + order.getStatus());
+            System.out.println("[✓] Status pengiriman diperbarui.");
+
+            System.out.println("\n--- Timeline Status ---");
+            order.getStatusTimeline().forEach(s -> System.out.println("  " + s));
+
+            System.out.println("\n--- Kesegaran Donasi dalam Bundle ---");
+            for (FoodDonation d : order.getBundle().getDonations()) {
+                long menit = java.time.temporal.ChronoUnit.MINUTES.between(
+                        LocalDateTime.now(), d.getExpiredAt());
+                System.out.printf("  %s | %-20s | Sisa: %d menit | Status: %s%n",
+                        d.getDonationId(), d.getFoodName(), menit, d.getStatus());
+            }
+        }
+
+        if (order.getStatus() == OrderStatus.IN_TRANSIT) {
+            System.out.println("[i] Order sudah IN_TRANSIT. Konfirmasi penerimaan dilakukan oleh panti.");
+            return;
+        }
+    }
+
+    private static OrderStatus nextStatus(OrderStatus current) {
+        return switch (current) {
+            case WAITING_PICKUP -> OrderStatus.PICKED_UP;
+            case PICKED_UP -> OrderStatus.IN_TRANSIT;
+            default -> current;
+        };
     }
 
     public static void showRestaurant(AppContext ctx, Scanner sc, Restaurant restaurant) {
@@ -506,43 +590,58 @@ public class Menu {
 
         System.out.print("  Nama restoran baru       : ");
         String v = sc.nextLine().trim();
-        if (!v.isEmpty()) newData.put("name", v);
+        if (!v.isEmpty())
+            newData.put("name", v);
 
         System.out.print("  Nama pemilik baru        : ");
         v = sc.nextLine().trim();
-        if (!v.isEmpty()) newData.put("owner", v);
+        if (!v.isEmpty())
+            newData.put("owner", v);
 
         System.out.print("  Alamat baru              : ");
         v = sc.nextLine().trim();
-        if (!v.isEmpty()) newData.put("address", v);
+        if (!v.isEmpty())
+            newData.put("address", v);
 
         System.out.print("  Koordinat lat baru       : ");
         v = sc.nextLine().trim();
         if (!v.isEmpty()) {
-            try { Double.parseDouble(v); newData.put("lat", v); }
-            catch (NumberFormatException e) { System.out.println("  [!] Lat tidak valid, dilewati."); }
+            try {
+                Double.parseDouble(v);
+                newData.put("lat", v);
+            } catch (NumberFormatException e) {
+                System.out.println("  [!] Lat tidak valid, dilewati.");
+            }
         }
 
         System.out.print("  Koordinat lon baru       : ");
         v = sc.nextLine().trim();
         if (!v.isEmpty()) {
-            try { Double.parseDouble(v); newData.put("lon", v); }
-            catch (NumberFormatException e) { System.out.println("  [!] Lon tidak valid, dilewati."); }
+            try {
+                Double.parseDouble(v);
+                newData.put("lon", v);
+            } catch (NumberFormatException e) {
+                System.out.println("  [!] Lon tidak valid, dilewati.");
+            }
         }
 
         System.out.print("  Jenis makanan baru       : ");
         v = sc.nextLine().trim();
-        if (!v.isEmpty()) newData.put("category", v);
+        if (!v.isEmpty())
+            newData.put("category", v);
 
         System.out.print("  No. HP baru              : ");
         v = sc.nextLine().trim();
-        if (!v.isEmpty()) newData.put("phone", v);
+        if (!v.isEmpty())
+            newData.put("phone", v);
 
         System.out.print("  Password baru (kosongkan jika tidak diubah): ");
         v = sc.nextLine().trim();
         if (!v.isEmpty()) {
-            if (v.length() < 6) System.out.println("  [!] Password min. 6 karakter, dilewati.");
-            else newData.put("password", v);
+            if (v.length() < 6)
+                System.out.println("  [!] Password min. 6 karakter, dilewati.");
+            else
+                newData.put("password", v);
         }
 
         if (newData.isEmpty()) {
@@ -640,13 +739,16 @@ public class Menu {
             System.out.println("  [4] Edit profil panti");
             System.out.println("  [0] Logout");
             FoodSaverApp.printDivider();
-            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1","2","3","4","0");
+            String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "4", "0");
             switch (ch) {
                 case "1" -> shelterConfirmDonation(ctx, sc, shelter);
                 case "2" -> shelterViewHistory(ctx, shelter);
                 case "3" -> shelterUpdateResidents(sc, shelter);
                 case "4" -> shelterEditProfile(ctx, sc, shelter);
-                case "0" -> { shelter.logout(); running = false; }
+                case "0" -> {
+                    shelter.logout();
+                    running = false;
+                }
             }
         }
     }
@@ -654,15 +756,16 @@ public class Menu {
     private static List<DeliveryOrder> getShelterIncomingOrders(AppContext ctx, Shelter shelter) {
         return ctx.history.getAll().stream()
                 .filter(o -> o.getShelter().getUserId().equals(shelter.getUserId()))
-                .filter(o -> o.getStatus() == OrderStatus.IN_TRANSIT
-                          || o.getStatus() == OrderStatus.WAITING_PICKUP
-                          || o.getStatus() == OrderStatus.PICKED_UP)
+                .filter(o -> o.getStatus() == OrderStatus.IN_TRANSIT)
                 .collect(Collectors.toList());
     }
 
     private static void shelterConfirmDonation(AppContext ctx, Scanner sc, Shelter shelter) {
         List<DeliveryOrder> incoming = getShelterIncomingOrders(ctx, shelter);
-        if (incoming.isEmpty()) { System.out.println("[!] Tidak ada donasi yang menunggu konfirmasi."); return; }
+        if (incoming.isEmpty()) {
+            System.out.println("[!] Tidak ada donasi yang menunggu konfirmasi.");
+            return;
+        }
 
         FoodSaverApp.printHeader("KONFIRMASI PENERIMAAN");
         for (int i = 0; i < incoming.size(); i++) {
@@ -673,16 +776,18 @@ public class Menu {
         }
 
         int choice = FoodSaverApp.readIndexOrCancel(sc, "Pilih nomor order (0=batal): ", incoming.size());
-        if (choice == 0) return;
+        if (choice == 0)
+            return;
 
         DeliveryOrder order = incoming.get(choice - 1);
         if (!FoodSaverApp.readYesNo(sc, "\nKonfirmasi diterima? [Y/N]: ")) {
-            System.out.println("[!] Konfirmasi dibatalkan."); return;
+            System.out.println("[!] Konfirmasi dibatalkan.");
+            return;
         }
 
-        int    rating = FoodSaverApp.readIntInRange(sc, "Rating donasi (1–5)        : ", 1, 5);
+        int rating = FoodSaverApp.readIntInRange(sc, "Rating donasi (1–5)        : ", 1, 5);
         System.out.print("Catatan                    : ");
-        String notes  = sc.nextLine();
+        String notes = sc.nextLine();
 
         shelter.confirmReceipt(order, rating, notes);
         ctx.auditLog.log(shelter.getUsername(), ActionType.DELIVER,
@@ -725,28 +830,39 @@ public class Menu {
 
         System.out.print("  Nama panti baru          : ");
         String v = sc.nextLine().trim();
-        if (!v.isEmpty()) newData.put("name", v);
+        if (!v.isEmpty())
+            newData.put("name", v);
 
         System.out.print("  Nama pengurus baru       : ");
         v = sc.nextLine().trim();
-        if (!v.isEmpty()) newData.put("manager", v);
+        if (!v.isEmpty())
+            newData.put("manager", v);
 
         System.out.print("  Alamat baru              : ");
         v = sc.nextLine().trim();
-        if (!v.isEmpty()) newData.put("address", v);
+        if (!v.isEmpty())
+            newData.put("address", v);
 
         System.out.print("  Koordinat lat baru       : ");
         v = sc.nextLine().trim();
         if (!v.isEmpty()) {
-            try { Double.parseDouble(v); newData.put("lat", v); }
-            catch (NumberFormatException e) { System.out.println("  [!] Lat tidak valid, dilewati."); }
+            try {
+                Double.parseDouble(v);
+                newData.put("lat", v);
+            } catch (NumberFormatException e) {
+                System.out.println("  [!] Lat tidak valid, dilewati.");
+            }
         }
 
         System.out.print("  Koordinat lon baru       : ");
         v = sc.nextLine().trim();
         if (!v.isEmpty()) {
-            try { Double.parseDouble(v); newData.put("lon", v); }
-            catch (NumberFormatException e) { System.out.println("  [!] Lon tidak valid, dilewati."); }
+            try {
+                Double.parseDouble(v);
+                newData.put("lon", v);
+            } catch (NumberFormatException e) {
+                System.out.println("  [!] Lon tidak valid, dilewati.");
+            }
         }
 
         System.out.print("  Jumlah penghuni baru     : ");
@@ -754,9 +870,13 @@ public class Menu {
         if (!v.isEmpty()) {
             try {
                 int n = Integer.parseInt(v);
-                if (n > 0) newData.put("residents", v);
-                else System.out.println("  [!] Harus > 0, dilewati.");
-            } catch (NumberFormatException e) { System.out.println("  [!] Bukan angka, dilewati."); }
+                if (n > 0)
+                    newData.put("residents", v);
+                else
+                    System.out.println("  [!] Harus > 0, dilewati.");
+            } catch (NumberFormatException e) {
+                System.out.println("  [!] Bukan angka, dilewati.");
+            }
         }
 
         System.out.println("  Tipe panti baru: [1] Anak Yatim  [2] Lansia  [3] Disabilitas  [Enter] Lewati");
@@ -769,19 +889,24 @@ public class Menu {
                 case "1" -> "ANAK_YATIM";
                 default -> null;
             };
-            if (type != null) newData.put("type", type);
-            else System.out.println("  [!] Pilihan tidak valid, dilewati.");
+            if (type != null)
+                newData.put("type", type);
+            else
+                System.out.println("  [!] Pilihan tidak valid, dilewati.");
         }
 
         System.out.print("  No. HP baru              : ");
         v = sc.nextLine().trim();
-        if (!v.isEmpty()) newData.put("phone", v);
+        if (!v.isEmpty())
+            newData.put("phone", v);
 
         System.out.print("  Password baru (kosongkan jika tidak diubah): ");
         v = sc.nextLine().trim();
         if (!v.isEmpty()) {
-            if (v.length() < 6) System.out.println("  [!] Password min. 6 karakter, dilewati.");
-            else newData.put("password", v);
+            if (v.length() < 6)
+                System.out.println("  [!] Password min. 6 karakter, dilewati.");
+            else
+                newData.put("password", v);
         }
 
         if (newData.isEmpty()) {

@@ -57,6 +57,12 @@ public class AuditLog {
         return new ArrayList<>(entries);
     }
 
+    public List<AuditEntry> traceDonationLifecycle(String donationId) {
+        List<AuditEntry> trace = filterByDonationId(donationId);
+        trace.sort((a, b) -> a.getTimestamp().compareTo(b.getTimestamp()));
+        return trace;
+    }
+
     public int size() {
         return entries.size();
     }

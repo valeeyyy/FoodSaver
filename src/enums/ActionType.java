@@ -17,5 +17,6 @@ public enum ActionType {
     WASTED,
     POST,
     MATCH,
-    DELIVER
+    DELIVER,
+    STATUS_UPDATE
 }
