@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -102,6 +104,7 @@ public class Menu {
         while (running) {
             ctx.pool.checkAlerts();
             FoodSaverApp.printHeader("MENU ADMIN — " + admin.getUsername());
+            System.out.println("  [0] Dashboard Ringkasan");
             System.out.println("  [1] Lihat & verifikasi akun pending");
             System.out.println("  [2] Donasi tidak tersalurkan");
             System.out.println("  [3] Stok donasi aktif");
@@ -113,28 +116,87 @@ public class Menu {
             System.out.println("  [9] Filter donasi by status (EXPIRED/WASTED)");
             System.out.println("  [10] Review permintaan edit profil");
             System.out.println("  [11] Update status pengiriman (kurir)");
-            System.out.println("  [0] Logout");
+            System.out.println("  [L] Logout");
             FoodSaverApp.printDivider();
             String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ",
-                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "0");
+                    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "L");
             switch (ch) {
-                case "1" -> adminVerifyAccounts(ctx, sc, admin);
-                case "2" -> adminViewUnmatched(admin);
-                case "3" -> adminViewActiveDonations(admin, ctx);
-                case "4" -> adminViewAuditLog(ctx, sc, admin);
-                case "5" -> adminSearchShelter(sc, admin);
-                case "6" -> adminSearchByName(ctx, sc, admin);
-                case "7" -> adminFilterOrdersByStatus(ctx, sc, admin);
-                case "8" -> adminFilterAuditByActor(ctx, sc, admin);
-                case "9" -> adminFilterDonationByStatus(ctx, sc, admin);
+                case "0"  -> adminViewDashboard(ctx, admin);
+                case "1"  -> adminVerifyAccounts(ctx, sc, admin);
+                case "2"  -> adminViewUnmatched(admin);
+                case "3"  -> adminViewActiveDonations(admin, ctx);
+                case "4"  -> adminViewAuditLog(ctx, sc, admin);
+                case "5"  -> adminSearchShelter(sc, admin);
+                case "6"  -> adminSearchByName(ctx, sc, admin);
+                case "7"  -> adminFilterOrdersByStatus(ctx, sc, admin);
+                case "8"  -> adminFilterAuditByActor(ctx, sc, admin);
+                case "9"  -> adminFilterDonationByStatus(ctx, sc, admin);
                 case "10" -> adminReviewEditRequests(ctx, sc, admin);
                 case "11" -> adminUpdateDelivery(ctx, sc);
-                case "0" -> {
+                case "L"  -> {
                     admin.logout();
                     running = false;
                 }
             }
         }
+    }
+
+    private static void adminViewDashboard(AppContext ctx, Admin admin) {
+        admin.viewDashboard();
+        LinkedList<User> pending = admin.viewPendingAccounts();
+        System.out.println("\n  📋  AKUN MENUNGGU VERIFIKASI (LinkedList — terbaru di atas):");
+        if (pending.isEmpty()) {
+            System.out.println("  └─ (tidak ada akun pending)");
+        } else {
+            for (User u : pending) {
+                String type = u instanceof Restaurant ? "RESTORAN" : "PANTI";
+                System.out.printf("  └─ [%s] %-20s | Daftar: %s%n",
+                        type, u.getUsername(),
+                        u.getRegisteredAt().format(DT_FMT));
+            }
+        }
+        List<FoodDonation> active = admin.viewActiveDonations();
+        HashMap<String, FoodDonation> activeMap = new HashMap<>();
+        for (FoodDonation d : active) {
+            activeMap.put(d.getDonationId(), d);
+        }
+        System.out.println("\n  🕐  DONASI AKTIF DI ANTRIAN (HashMap — akses cepat by ID O(1)):");
+        if (activeMap.isEmpty()) {
+            System.out.println("  └─ (antrian kosong)");
+        } else {
+            for (FoodDonation d : activeMap.values()) {
+                long menit = d.getRemainingMinutes();
+                String alert = menit <= 30  ? " 🔴 RED ALERT"
+                             : menit <= 120 ? " 🟡 YELLOW ALERT"
+                             : "";
+                System.out.printf("  └─ %s | %-18s | %3d porsi | sisa %3d mnt | %s%s%n",
+                        d.getDonationId(), d.getFoodName(), d.getPortions(),
+                        menit, d.getRestaurant().getName(), alert);
+            }
+        }
+
+        List<FoodDonation> unmatched = admin.viewUnmatchedDonations();
+        System.out.println("\n  ⚠️  DONASI TIDAK TERSALURKAN (Queue — beserta alasan penyebab):");
+        if (unmatched.isEmpty()) {
+            System.out.println("  └─ (semua donasi sudah dicocokkan atau antrian kosong)");
+        } else {
+            for (FoodDonation d : unmatched) {
+                long menit = d.getRemainingMinutes();
+                String alasan;
+                if (menit <= 0) {
+                    alasan = "Sudah expired, tidak sempat dicocokkan";
+                } else if (menit <= 30) {
+                    alasan = "Sisa waktu kritis (<30 mnt) — radius diperluas ke "
+                            + util.SystemConfig.EXPANDED_RADIUS_KM + " km";
+                } else {
+                    alasan = "Belum ada panti eligible dalam radius "
+                            + util.SystemConfig.MAX_RADIUS_KM + " km";
+                }
+                System.out.printf("  └─ %s | %-18s | %3d porsi | Alasan: %s%n",
+                        d.getDonationId(), d.getFoodName(), d.getPortions(), alasan);
+            }
+        }
+        System.out.println();
     }
 
     private static void adminVerifyAccounts(AppContext ctx, Scanner sc, Admin admin) {
@@ -772,7 +834,8 @@ public class Menu {
             DeliveryOrder o = incoming.get(i);
             System.out.printf("[%d] Order: %s%n    Dari   : ", i + 1, o.getOrderId());
             o.getBundle().getRestaurantList().forEach(r -> System.out.print(r.getName() + " "));
-            System.out.printf("%n    Porsi  : %d%n    Status : %s%n", o.getBundle().getTotalPortions(), o.getStatus());
+            System.out.printf("%n    Porsi  : %d | Surplus: %d | Status: %s%n",
+                    o.getBundle().getTotalPortions(), o.getPortionSurplus(), o.getStatus());
         }
 
         int choice = FoodSaverApp.readIndexOrCancel(sc, "Pilih nomor order (0=batal): ", incoming.size());
@@ -788,11 +851,24 @@ public class Menu {
         int rating = FoodSaverApp.readIntInRange(sc, "Rating donasi (1–5)        : ", 1, 5);
         System.out.print("Catatan                    : ");
         String notes = sc.nextLine();
-
         shelter.confirmReceipt(order, rating, notes);
+        ctx.history.addFirst(order);
         ctx.auditLog.log(shelter.getUsername(), ActionType.DELIVER,
                 order.getOrderId(), "Confirmed by shelter. Rating: " + rating);
-        System.out.println("[✓] Penerimaan dikonfirmasi. Status order: DELIVERED");
+
+        int totalPortions = order.getBundle().getTotalPortions();
+        int surplus       = order.getPortionSurplus();
+        int received      = totalPortions - surplus;
+
+        System.out.println("\n[✓] Penerimaan dikonfirmasi. Status order: DELIVERED");
+        System.out.printf("    Porsi diterima  : %d (dari total %d porsi bundle)%n", received, totalPortions);
+        if (surplus > 0)
+            System.out.printf("    Porsi surplus   : %d (lebih dari kebutuhan — tercatat di order)%n", surplus);
+        System.out.printf("    Rating diberikan: %d/5%n", rating);
+        if (!notes.isBlank())
+            System.out.printf("    Catatan         : %s%n", notes);
+        System.out.printf("    Porsi hari ini  : %d / %d penghuni%n",
+                shelter.getPortionsToday(), shelter.getResidents());
     }
 
     private static void shelterViewHistory(AppContext ctx, Shelter shelter) {
@@ -802,9 +878,29 @@ public class Menu {
             return;
         }
         FoodSaverApp.printHeader("RIWAYAT PENERIMAAN — " + shelter.getName());
-        for (DeliveryOrder o : all)
-            System.out.printf("  %s | Porsi: %3d | Rating: %d | Status: %s%n",
-                    o.getOrderId(), o.getBundle().getTotalPortions(), o.getRating(), o.getStatus());
+        System.out.printf("  %-12s | %-6s | %-8s | %-7s | %-7s | %-8s | Catatan%n",
+                "Order ID", "Status", "Porsi", "Surplus", "Rating", "Tgl Dibuat");
+        System.out.println("  " + "─".repeat(80));
+
+        for (DeliveryOrder o : all) {
+            int totalPortions = o.getBundle().getTotalPortions();
+            int surplus       = o.getPortionSurplus();
+            int received      = totalPortions - surplus;
+            System.out.printf("  %-12s | %-6s | %3d/%-3d | %-7d | %-7d | %-8s | %s%n",
+                    o.getOrderId(),
+                    o.getStatus(),
+                    received, totalPortions,
+                    surplus,
+                    o.getRating(),
+                    o.getCreatedAt().format(TM_FMT),
+                    o.getReceiptNotes().isBlank() ? "(tidak ada)" : o.getReceiptNotes());
+            System.out.print("                 Makanan: ");
+            o.getBundle().getDonations().forEach(d ->
+                    System.out.printf("[%s %d porsi] ", d.getFoodName(), d.getPortions()));
+            System.out.println();
+        }
+        System.out.printf("%n  Total porsi diterima hari ini: %d / %d penghuni%n",
+                shelter.getPortionsToday(), shelter.getResidents());
     }
 
     private static void shelterEditProfile(AppContext ctx, Scanner sc, Shelter shelter) {

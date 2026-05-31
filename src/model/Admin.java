@@ -10,6 +10,7 @@ import enums.DonationStatus;
 import enums.OrderStatus;
 import enums.ShelterType;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -55,11 +56,14 @@ public class Admin extends User {
         }
     }
 
-    public List<User> viewPendingAccounts() {
-        List<User> pending = new ArrayList<>();
+    // 3.2.11 — Data Structure: LinkedList digunakan agar akun pending
+    // dapat ditambahkan dengan cepat (addFirst O(1)) sehingga akun terbaru
+    // selalu tampil paling atas saat ditampilkan di dashboard.
+    public LinkedList<User> viewPendingAccounts() {
+        LinkedList<User> pending = new LinkedList<>();
         for (User u : userMap.values()) {
             if (u.getAccountStatus() == AccountStatus.PENDING) {
-                pending.add(u);
+                pending.addFirst(u); // insert di head agar terbaru di atas
             }
         }
         return pending;
@@ -147,8 +151,50 @@ public class Admin extends User {
         return auditLog.filterByActor(username);
     }
 
-    public int getAdminLevel() {
-        return adminLevel;
+    public void viewDashboard() {
+        List<FoodDonation> activeDonations = pool.getAll();
+
+        int totalActive  = activeDonations.size();
+        int waitingCount = 0;
+        int matchedCount = 0;
+
+        for (FoodDonation d : activeDonations) {
+            if (d.getStatus() == DonationStatus.WAITING) waitingCount++;
+            if (d.getStatus() == DonationStatus.MATCHED) matchedCount++;
+        }
+
+        List<DeliveryOrder> allOrders = history.getAll();
+
+        int deliveredCount   = 0;
+        int deliveredPortions = 0;
+
+        for (DeliveryOrder o : allOrders) {
+            if (o.getStatus() == OrderStatus.DELIVERED) {
+                deliveredCount++;
+                deliveredPortions += o.getBundle().getTotalPortions() - o.getPortionSurplus();
+            }
+        }
+
+        int expiredCount = history.getExpiredHistory().size();
+        int wastedCount  = history.getWastedHistory().size();
+
+        LinkedList<User> pendingAccounts = viewPendingAccounts();
+
+        System.out.println("\n╔══════════════════════════════════════════════════╗");
+        System.out.println("║           📊  DASHBOARD ADMIN — RINGKASAN        ║");
+        System.out.println("╠══════════════════════════════════════════════════╣");
+        System.out.printf("║  Donasi aktif di antrian   : %-20d║%n", totalActive);
+        System.out.printf("║    ↳ Menunggu matching     : %-20d║%n", waitingCount);
+        System.out.printf("║    ↳ Sudah dicocokkan      : %-20d║%n", matchedCount);
+        System.out.println("║──────────────────────────────────────────────────║");
+        System.out.printf("║  Order terselesaikan       : %-20d║%n", deliveredCount);
+        System.out.printf("║  Porsi berhasil disalurkan : %-20d║%n", deliveredPortions);
+        System.out.println("║──────────────────────────────────────────────────║");
+        System.out.printf("║  Donasi expired (tdk sampai)  : %-15d║%n", expiredCount);
+        System.out.printf("║  Donasi wasted (terbuang)     : %-15d║%n", wastedCount);
+        System.out.println("║──────────────────────────────────────────────────║");
+        System.out.printf("║  Akun menunggu verifikasi  : %-20d║%n", pendingAccounts.size());
+        System.out.println("╚══════════════════════════════════════════════════╝");
     }
 
     public List<User> viewPendingEdits() {
@@ -168,7 +214,6 @@ public class Admin extends User {
             req.approve(notes);
             Map<String, String> data = req.getNewData();
 
-            // apply common User fields
             if (data.containsKey("phone"))   user.setPhone(data.get("phone"));
             if (data.containsKey("address")) user.setAddress(data.get("address"));
             if (data.containsKey("password")) user.setPassword(data.get("password"));

@@ -35,6 +35,10 @@ public class Shelter extends User {
 
     public void confirmReceipt(DeliveryOrder order, int rating, String notes) {
         order.confirmDelivery(rating, notes);
+        int totalPortions    = order.getBundle().getTotalPortions();
+        int surplus          = order.getPortionSurplus();
+        int portionsReceived = totalPortions - surplus;
+        addPortionsToday(portionsReceived);
         receiptHistory.addFirst(order);
     }
 
