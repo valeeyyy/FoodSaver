@@ -5,13 +5,12 @@ import datastructure.DeliveryHistory;
 import datastructure.DonationPool;
 import datastructure.FoodExpiryTree;
 import datastructure.ShelterRegistry;
-import model.*;
 import enums.ActionType;
-import util.GeoUtils;
-import util.SystemConfig;
-
 import java.util.ArrayList;
 import java.util.List;
+import model.*;
+import util.GeoUtils;
+import util.SystemConfig;
 
 public class MatchingEngine implements Notifiable {
 
@@ -119,10 +118,10 @@ public class MatchingEngine implements Notifiable {
     }
 
     boolean applyFilters(DonationBundle bundle, Shelter shelter, double radiusKm) {
+        long arrivalMs = GeoUtils.estimateArrivalMs(bundle.getRestaurantList(), shelter);
         return filterPortions(bundle, shelter)
                 && filterDistance(bundle, shelter, radiusKm)
-                && filterFreshness(bundle, GeoUtils.estimateArrivalMs(
-                        bundle.getRestaurantList(), shelter));
+                && filterFreshness(bundle, arrivalMs, shelter); // ← passing shelter
     }
 
     boolean filterPortions(DonationBundle bundle, Shelter shelter) {
@@ -139,9 +138,9 @@ public class MatchingEngine implements Notifiable {
         return true;
     }
 
-    boolean filterFreshness(DonationBundle bundle, long arrivalMs) {
+    boolean filterFreshness(DonationBundle bundle, long arrivalMs, Shelter shelter) {
         for (FoodDonation d : bundle.getDonations()) {
-            if (!GeoUtils.isSafeToDeliver(d, arrivalMs))
+            if (!GeoUtils.isSafeToDeliver(d, arrivalMs, shelter))
                 return false;
         }
         return true;

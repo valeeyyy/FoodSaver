@@ -1,10 +1,12 @@
 package util;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
 import model.FoodDonation;
 import model.Restaurant;
 import model.Shelter;
-
-import java.util.List;
 
 public class GeoUtils {
 
@@ -25,16 +27,19 @@ public class GeoUtils {
         double loadingMinutes = (double) pickups.size() * SystemConfig.LOADING_TIME_MINUTES;
 
         double totalMinutes = travelMinutes + loadingMinutes;
-        return (long) (totalMinutes * 60 * 1000); 
+        return (long) (totalMinutes * 60 * 1000);
     }
 
-    public static boolean isSafeToDeliver(FoodDonation d, long arrivalMs) {
+    public static boolean isSafeToDeliver(FoodDonation d, long arrivalMs, Shelter shelter) {
         long expiredEpoch = d.getExpiredAt()
                 .minusMinutes(SystemConfig.FRESHNESS_BUFFER_MIN)
-                .atZone(java.time.ZoneId.systemDefault())
-                .toInstant().toEpochMilli();
+                .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         long arrivalEpoch = System.currentTimeMillis() + arrivalMs;
-        return arrivalEpoch <= expiredEpoch;
+        if (arrivalEpoch > expiredEpoch)
+            return false;
+        LocalDateTime arrivalTime = LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(arrivalEpoch), ZoneId.systemDefault());
+        return shelter.isOpenAt(arrivalTime);
     }
 
     public static double getTotalRouteKm(List<Restaurant> pickups, Shelter shelter) {

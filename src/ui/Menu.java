@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
-
 import model.*;
 import util.GeoUtils;
 import util.SystemConfig;
@@ -70,6 +69,9 @@ public class Menu {
         double lat = FoodSaverApp.readDoubleInRange(sc, "Koordinat (lat)   : ", -90.0, 90.0);
         double lon = FoodSaverApp.readDoubleInRange(sc, "Koordinat (lon)   : ", -180.0, 180.0);
         int residents = FoodSaverApp.readPositiveInt(sc, "Jumlah penghuni   : ");
+        System.out.println("Jam penerimaan    : (format jam, contoh: 7 untuk 07:00)");
+        int startHour = FoodSaverApp.readIntInRange(sc, "Mulai jam         : ", 0, 23);
+        int endHour = FoodSaverApp.readIntInRange(sc, "Sampai jam        : ", startHour + 1, 24);
 
         System.out.println("Jenis panti       : [1] Anak Yatim  [2] Lansia  [3] Disabilitas");
         int typeChoice = FoodSaverApp.readIntInRange(sc, "Pilihan           : ", 1, 3);
@@ -121,19 +123,19 @@ public class Menu {
             String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ",
                     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "L");
             switch (ch) {
-                case "0"  -> adminViewDashboard(ctx, admin);
-                case "1"  -> adminVerifyAccounts(ctx, sc, admin);
-                case "2"  -> adminViewUnmatched(admin);
-                case "3"  -> adminViewActiveDonations(admin, ctx);
-                case "4"  -> adminViewAuditLog(ctx, sc, admin);
-                case "5"  -> adminSearchShelter(sc, admin);
-                case "6"  -> adminSearchByName(ctx, sc, admin);
-                case "7"  -> adminFilterOrdersByStatus(ctx, sc, admin);
-                case "8"  -> adminFilterAuditByActor(ctx, sc, admin);
-                case "9"  -> adminFilterDonationByStatus(ctx, sc, admin);
+                case "0" -> adminViewDashboard(ctx, admin);
+                case "1" -> adminVerifyAccounts(ctx, sc, admin);
+                case "2" -> adminViewUnmatched(admin);
+                case "3" -> adminViewActiveDonations(admin, ctx);
+                case "4" -> adminViewAuditLog(ctx, sc, admin);
+                case "5" -> adminSearchShelter(sc, admin);
+                case "6" -> adminSearchByName(ctx, sc, admin);
+                case "7" -> adminFilterOrdersByStatus(ctx, sc, admin);
+                case "8" -> adminFilterAuditByActor(ctx, sc, admin);
+                case "9" -> adminFilterDonationByStatus(ctx, sc, admin);
                 case "10" -> adminReviewEditRequests(ctx, sc, admin);
                 case "11" -> adminUpdateDelivery(ctx, sc);
-                case "L"  -> {
+                case "L" -> {
                     admin.logout();
                     running = false;
                 }
@@ -166,9 +168,9 @@ public class Menu {
         } else {
             for (FoodDonation d : activeMap.values()) {
                 long menit = d.getRemainingMinutes();
-                String alert = menit <= 30  ? " 🔴 RED ALERT"
-                             : menit <= 120 ? " 🟡 YELLOW ALERT"
-                             : "";
+                String alert = menit <= 30 ? " 🔴 RED ALERT"
+                        : menit <= 120 ? " 🟡 YELLOW ALERT"
+                                : "";
                 System.out.printf("  └─ %s | %-18s | %3d porsi | sisa %3d mnt | %s%s%n",
                         d.getDonationId(), d.getFoodName(), d.getPortions(),
                         menit, d.getRestaurant().getName(), alert);
@@ -857,8 +859,8 @@ public class Menu {
                 order.getOrderId(), "Confirmed by shelter. Rating: " + rating);
 
         int totalPortions = order.getBundle().getTotalPortions();
-        int surplus       = order.getPortionSurplus();
-        int received      = totalPortions - surplus;
+        int surplus = order.getPortionSurplus();
+        int received = totalPortions - surplus;
 
         System.out.println("\n[✓] Penerimaan dikonfirmasi. Status order: DELIVERED");
         System.out.printf("    Porsi diterima  : %d (dari total %d porsi bundle)%n", received, totalPortions);
@@ -884,8 +886,8 @@ public class Menu {
 
         for (DeliveryOrder o : all) {
             int totalPortions = o.getBundle().getTotalPortions();
-            int surplus       = o.getPortionSurplus();
-            int received      = totalPortions - surplus;
+            int surplus = o.getPortionSurplus();
+            int received = totalPortions - surplus;
             System.out.printf("  %-12s | %-6s | %3d/%-3d | %-7d | %-7d | %-8s | %s%n",
                     o.getOrderId(),
                     o.getStatus(),
@@ -895,8 +897,8 @@ public class Menu {
                     o.getCreatedAt().format(TM_FMT),
                     o.getReceiptNotes().isBlank() ? "(tidak ada)" : o.getReceiptNotes());
             System.out.print("                 Makanan: ");
-            o.getBundle().getDonations().forEach(d ->
-                    System.out.printf("[%s %d porsi] ", d.getFoodName(), d.getPortions()));
+            o.getBundle().getDonations()
+                    .forEach(d -> System.out.printf("[%s %d porsi] ", d.getFoodName(), d.getPortions()));
             System.out.println();
         }
         System.out.printf("%n  Total porsi diterima hari ini: %d / %d penghuni%n",

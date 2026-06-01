@@ -1,7 +1,7 @@
 package model;
 
 import enums.ShelterType;
-
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,6 +14,8 @@ public class Shelter extends User {
     private int residents;
     private ShelterType shelterType;
     private int portionsToday;
+    private int receptionStartHour;
+    private int receptionEndHour;
 
     private final LinkedList<DeliveryOrder> receiptHistory;
 
@@ -35,8 +37,8 @@ public class Shelter extends User {
 
     public void confirmReceipt(DeliveryOrder order, int rating, String notes) {
         order.confirmDelivery(rating, notes);
-        int totalPortions    = order.getBundle().getTotalPortions();
-        int surplus          = order.getPortionSurplus();
+        int totalPortions = order.getBundle().getTotalPortions();
+        int surplus = order.getPortionSurplus();
         int portionsReceived = totalPortions - surplus;
         addPortionsToday(portionsReceived);
         receiptHistory.addFirst(order);
@@ -53,6 +55,11 @@ public class Shelter extends User {
 
     public boolean canReceiveMore() {
         return portionsToday < residents;
+    }
+
+    public boolean isOpenAt(LocalDateTime time) {
+        int hour = time.getHour();
+        return hour >= receptionStartHour && hour < receptionEndHour;
     }
 
     public int getRemainingNeed() {
@@ -95,16 +102,42 @@ public class Shelter extends User {
         return portionsToday;
     }
 
-    public void setName(String name)             { this.name = name; }
-    public void setManagerName(String mgr)       { this.managerName = mgr; }
-    public void setLat(double lat)               { this.lat = lat; }
-    public void setLon(double lon)               { this.lon = lon; }
-    public void setResidents(int residents)      { this.residents = residents; }
-    public void setShelterType(ShelterType type) { this.shelterType = type; }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setManagerName(String mgr) {
+        this.managerName = mgr;
+    }
+
+    public void setLat(double lat) {
+        this.lat = lat;
+    }
+
+    public void setLon(double lon) {
+        this.lon = lon;
+    }
+
+    public void setResidents(int residents) {
+        this.residents = residents;
+    }
+
+    public void setShelterType(ShelterType type) {
+        this.shelterType = type;
+    }
+
+    public int getReceptionStartHour() {
+        return receptionStartHour;
+    }
+
+    public int getReceptionEndHour() {
+        return receptionEndHour; 
+    }
 
     @Override
     public String toString() {
         return String.format("Shelter{id='%s', name='%s', residents=%d, need=%d, status=%s}",
                 userId, name, residents, getRemainingNeed(), accountStatus);
     }
+
 }
