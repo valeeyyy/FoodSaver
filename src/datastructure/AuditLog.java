@@ -16,7 +16,7 @@ public class AuditLog {
     }
 
     public void log(String actor, ActionType action, String targetId, String notes) {
-        entries.addFirst(new AuditEntry(actor, action, targetId, notes));
+        entries.addFirst(new AuditEntry(actor, action, targetId, notes, null));
     }
 
     public void log(AuditEntry entry) {

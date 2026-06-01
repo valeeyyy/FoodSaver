@@ -64,7 +64,7 @@ public class Notification {
             case MATCH_FOUND -> ActionType.MATCH;
             case STARTUP_CLEANUP -> ActionType.STARTUP_CLEANUP;
         };
-        return new AuditEntry("SYSTEM", action, targetId, message);
+        return new AuditEntry("SYSTEM", action, targetId, message, null);
     }
 
     public String getMessage() {

@@ -580,6 +580,16 @@ public class Menu {
                     order.getOrderId(), "Status -> " + order.getStatus());
             System.out.println("[✓] Status pengiriman diperbarui.");
 
+            for (FoodDonation d : order.getBundle().getDonations()) {
+                if (d.getStatus() == enums.DonationStatus.WASTED) {
+                    ctx.auditLog.log(new AuditEntry("SYSTEM", ActionType.WASTED,
+                            d.getDonationId(),
+                            "Wasted during IN_TRANSIT on order " + order.getOrderId(),
+                            enums.DonationStatus.WASTED));
+                    ctx.history.addWasted(d);
+                }
+            }
+
             System.out.println("\n--- Timeline Status ---");
             order.getStatusTimeline().forEach(s -> System.out.println("  " + s));
 
@@ -855,8 +865,9 @@ public class Menu {
         String notes = sc.nextLine();
         shelter.confirmReceipt(order, rating, notes);
         ctx.history.addFirst(order);
-        ctx.auditLog.log(shelter.getUsername(), ActionType.DELIVER,
-                order.getOrderId(), "Confirmed by shelter. Rating: " + rating);
+        ctx.auditLog.log(new AuditEntry(shelter.getUsername(), ActionType.DELIVER,
+                order.getOrderId(), "Confirmed by shelter. Rating: " + rating,
+                enums.DonationStatus.DELIVERED));
 
         int totalPortions = order.getBundle().getTotalPortions();
         int surplus = order.getPortionSurplus();

@@ -2,6 +2,7 @@ package model;
 
 import enums.ActionType;
 import util.IdGenerator;
+import enums.DonationStatus;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -16,14 +17,16 @@ public class AuditEntry {
     private final ActionType actionType;
     private final String targetId;
     private final String notes;
+    private final DonationStatus finalStatus;
 
-    public AuditEntry(String actor, ActionType actionType, String targetId, String notes) {
+    public AuditEntry(String actor, ActionType actionType, String targetId, String notes, DonationStatus finalStatus) {
         this.entryId = IdGenerator.nextEntryId();
         this.timestamp = LocalDateTime.now();
         this.actor = actor;
         this.actionType = actionType;
         this.targetId = targetId;
         this.notes = notes;
+        this.finalStatus = finalStatus;
     }
 
     public static DateTimeFormatter getFmt() {
@@ -54,8 +57,14 @@ public class AuditEntry {
         return notes;
     }
 
+    public DonationStatus getFinalStatus() {
+        return finalStatus;
+    }
+
     @Override
     public String toString() {
-        return String.format("[%s] %s | %-15s | target=%-20s | %s", timestamp.format(FMT), actor, actionType, targetId, notes);
+        String statusPart = (finalStatus != null) ? " | finalStatus=" + finalStatus : "";
+        return String.format("[%s] %s | %-15s | target=%-20s | %s%s",
+                timestamp.format(FMT), actor, actionType, targetId, notes, statusPart);
     }
 }

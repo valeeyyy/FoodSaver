@@ -90,10 +90,6 @@ public class MatchingEngine implements Notifiable {
         int portionsDelivered = winner.getBundle().getTotalPortions() - winner.getPortionSurplus();
         winner.getShelter().addPortionsToday(portionsDelivered);
 
-        auditLog.log("SYSTEM", ActionType.MATCH,
-                winner.getBundle().getBundleId(),
-                "Matched to " + winner.getShelter().getName());
-
         onMatchFound(order);
 
         if (!pool.isEmpty()) {
@@ -199,7 +195,9 @@ public class MatchingEngine implements Notifiable {
     public void onDonationExpired(FoodDonation d) {
         System.out.printf("[EXPIRED] Donasi %s (%s) telah kadaluarsa.%n",
                 d.getDonationId(), d.getFoodName());
-        auditLog.log("SYSTEM", ActionType.EXPIRE, d.getDonationId(), "Expired without delivery");
+        auditLog.log(new AuditEntry("SYSTEM", ActionType.EXPIRE,
+                d.getDonationId(), "Expired without delivery",
+                enums.DonationStatus.EXPIRED_UNDELIVERED));
     }
 
     @Override
