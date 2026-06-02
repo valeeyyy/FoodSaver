@@ -908,7 +908,6 @@ public class Menu {
         System.out.print("Catatan                    : ");
         String notes = sc.nextLine();
         shelter.confirmReceipt(order, rating, notes);
-        ctx.history.addFirst(order);
         ctx.auditLog.log(new AuditEntry(shelter.getUsername(), ActionType.DELIVER,
                 order.getOrderId(), "Confirmed by shelter. Rating: " + rating,
                 enums.DonationStatus.DELIVERED));
