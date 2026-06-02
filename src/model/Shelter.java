@@ -131,7 +131,15 @@ public class Shelter extends User {
     }
 
     public int getReceptionEndHour() {
-        return receptionEndHour; 
+        return receptionEndHour;
+    }
+
+    public void setReceptionStartHour(int h) {
+        this.receptionStartHour = h;
+    }
+
+    public void setReceptionEndHour(int h) {
+        this.receptionEndHour = h;
     }
 
     @Override

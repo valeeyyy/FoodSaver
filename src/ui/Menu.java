@@ -118,10 +118,11 @@ public class Menu {
             System.out.println("  [9] Filter donasi by status (EXPIRED/WASTED)");
             System.out.println("  [10] Review permintaan edit profil");
             System.out.println("  [11] Update status pengiriman (kurir)");
+            System.out.println("  [12] Lihat semua panti & restoran terdaftar");
             System.out.println("  [L] Logout");
             FoodSaverApp.printDivider();
             String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ",
-                    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "L");
+                    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "L");
             switch (ch) {
                 case "0" -> adminViewDashboard(ctx, admin);
                 case "1" -> adminVerifyAccounts(ctx, sc, admin);
@@ -135,6 +136,7 @@ public class Menu {
                 case "9" -> adminFilterDonationByStatus(ctx, sc, admin);
                 case "10" -> adminReviewEditRequests(ctx, sc, admin);
                 case "11" -> adminUpdateDelivery(ctx, sc);
+                case "12" -> adminViewRegisteredAccounts(ctx);
                 case "L" -> {
                     admin.logout();
                     running = false;
@@ -287,6 +289,48 @@ public class Menu {
                     System.out.printf("      %.2f km → %s%n", sd.km(), sd.shelter().getName());
                 }
             }
+        }
+    }
+
+    private static void adminViewRegisteredAccounts(AppContext ctx) {
+        FoodSaverApp.printHeader("DAFTAR RESTORAN & PANTI TERDAFTAR");
+
+        List<Restaurant> restaurants = new ArrayList<>();
+        List<Shelter> shelters = new ArrayList<>();
+
+        for (User u : ctx.userMap.values()) {
+            if (u instanceof Restaurant r) {
+                restaurants.add(r);
+            } else if (u instanceof Shelter s) {
+                shelters.add(s);
+            }
+        }
+
+        if (restaurants.isEmpty() && shelters.isEmpty()) {
+            System.out.println("  (Belum ada restoran atau panti terdaftar)");
+            return;
+        }
+
+        if (!restaurants.isEmpty()) {
+            restaurants.sort(Comparator.comparing(Restaurant::getName));
+            System.out.println("  🍽️  RESTORAN TERDAFTAR:");
+            for (Restaurant r : restaurants) {
+                System.out.printf("    - %s (%s) | %s | Status: %s%n",
+                        r.getName(), r.getUsername(), r.getAddress(), r.getAccountStatus());
+            }
+        } else {
+            System.out.println("  (Tidak ada restoran terdaftar)");
+        }
+
+        if (!shelters.isEmpty()) {
+            shelters.sort(Comparator.comparing(Shelter::getName));
+            System.out.println("\n  🏠  PANTI TERDAFTAR:");
+            for (Shelter s : shelters) {
+                System.out.printf("    - %s (%s) | %s | Penghuni: %d | Status: %s%n",
+                        s.getName(), s.getUsername(), s.getAddress(), s.getResidents(), s.getAccountStatus());
+            }
+        } else {
+            System.out.println("  (Tidak ada panti terdaftar)");
         }
     }
 
