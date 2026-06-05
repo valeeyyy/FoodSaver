@@ -2,16 +2,16 @@ package ui;
 
 import datastructure.*;
 import engine.MatchingEngine;
-import model.*;
 import enums.AccountStatus;
 import enums.ActionType;
 import enums.DonationStatus;
 import enums.ShelterType;
-
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import model.*;
 
 public class AppContext {
 
@@ -108,13 +108,16 @@ public class AppContext {
 
         for (Object[] data : shelterData) {
             Shelter s = new Shelter(
-                    (String) data[0], (String) data[1],
-                    (String) data[2], (String) data[3],
-                    (String) data[4], (String) data[5],
-                    (double) data[6], (double) data[7],
-                    (int) data[8], (ShelterType) data[9]);
-            s.setReceptionStartHour(0);
-            s.setReceptionEndHour(24); 
+                    (String) data[0],
+                    (String) data[1],
+                    (String) data[2],
+                    (String) data[3],
+                    (String) data[4],
+                    (String) data[5],
+                    (double) data[6],
+                    (double) data[7],
+                    (int) data[8],
+                    (ShelterType) data[9]);
             s.setAccountStatus(AccountStatus.APPROVED);
             userMap.put(s.getUsername(), s);
             registry.register(s);
@@ -123,6 +126,54 @@ public class AppContext {
         }
 
         System.out.println("[✓] Dummy data loaded: 5 restoran + 5 panti (semua APPROVED).");
+
+        FoodDonation d1 = new FoodDonation(
+                "Nasi Putih + Ayam Goreng", 90,
+                LocalDateTime.now().minusHours(2),
+                "Masih hangat, baru dimasak siang",
+                restaurants[0]);
+        restaurants[0].postDonation(d1);
+        submitDonation(d1);
+
+        FoodDonation d2 = new FoodDonation(
+                "Rendang + Nasi", 50,
+                LocalDateTime.now().minusHours(3),
+                "Rendang spesial",
+                restaurants[2]);
+        restaurants[2].postDonation(d2);
+        submitDonation(d2);
+
+        FoodDonation d3 = new FoodDonation(
+                "Mie Ayam Spesial", 40,
+                LocalDateTime.now().minusHours(4).minusMinutes(30),
+                "Hampir habis masa segar",
+                restaurants[3]);
+        restaurants[3].postDonation(d3);
+        submitDonation(d3);
+
+        FoodDonation d4 = new FoodDonation(
+                "Nasi Box Catering", 65,
+                LocalDateTime.now().minusHours(5),
+                "Sisa catering acara kantor",
+                restaurants[4]);
+        restaurants[4].postDonation(d4);
+        submitDonation(d4);
+
+        FoodDonation d5 = new FoodDonation(
+                "Bakso Kuah", 30,
+                LocalDateTime.now().minusHours(5).minusMinutes(40),
+                "Segera diambil sebelum expired!",
+                restaurants[1]);
+        restaurants[1].postDonation(d5);
+        submitDonation(d5);
+
+        System.out.println("\n[✓] Dummy donasi loaded:");
+        System.out.println("    d1 — Nasi Ayam  : NORMAL       (~4 jam sisa)");
+        System.out.println("    d2 — Rendang    : NORMAL       (~3 jam sisa)");
+        System.out.println("    d3 — Mie Ayam   : YELLOW ALERT (~1.5 jam sisa)");
+        System.out.println("    d4 — Nasi Box   : YELLOW ALERT (~1 jam sisa)");
+        System.out.println("    d5 — Bakso Kuah : RED ALERT    (~20 menit sisa)");
+
     }
 
     public void startup() {
