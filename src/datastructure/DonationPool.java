@@ -58,16 +58,15 @@ public class DonationPool {
     }
 
     public int purgeExpired() {
-        int count = 0;
-        Iterator<FoodDonation> it = queue.iterator();
-        while (it.hasNext()) {
-            FoodDonation d = it.next();
+        List<FoodDonation> toRemove = new ArrayList<>();
+        for (FoodDonation d : queue) {
             if (!d.isStillFresh()) {
-                it.remove();
-                count++;
+                d.markAsExpired();
+                toRemove.add(d);
             }
         }
-        return count;
+        queue.removeAll(toRemove);
+        return toRemove.size();
     }
 
     public void checkAlerts() {
