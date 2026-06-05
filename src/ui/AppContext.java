@@ -62,8 +62,8 @@ public class AppContext {
                 -7.2490, 112.7410, "Masakan Padang"),
             new Restaurant("Warung Tegal Pak Joko", "Joko Santoso",
                 "warung_pakjoko", "pakjoko123",
-                "081234567004", "Jl. Tandes Raya No. 15, Surabaya",
-                -7.3500, 112.6800, "Masakan Jawa & Tegal"),
+                "081234567004", "Jl. Raya Benowo No. 15, Surabaya",
+                -7.3000, 112.6560, "Masakan Jawa & Tegal"),
             new Restaurant("Catering Nusantara", "Rina Wahyuni",
                 "catering_nusa", "nusa123",
                 "081234567005", "Jl. Gubeng Jaya No. 7, Surabaya",
@@ -94,6 +94,10 @@ public class AppContext {
                     (String)sd[i][4], (String)sd[i][5], (double)sd[i][6], (double)sd[i][7],
                     (int)sd[i][8], (ShelterType)sd[i][9]);
             s[i].setAccountStatus(AccountStatus.APPROVED);
+            // Panti demo menerima donasi 24 jam — sesuai siklus donasi malam hari
+            // (proposal §1.2.2) sehingga matching tetap berjalan kapan pun program dijalankan.
+            s[i].setReceptionStartHour(0);
+            s[i].setReceptionEndHour(24);
             userMap.put(s[i].getUsername(), s[i]);
             registry.register(s[i]);
             auditLog.log("admin", ActionType.APPROVE, s[i].getUserId(), "Shelter approved: " + s[i].getName());
@@ -207,7 +211,7 @@ public class AppContext {
 
     public User findUser(String username, String password) {
         User u = userMap.get(username);
-        if (u != null && u.getPassword().equals(password)) {
+        if (u != null && u.login(username, password)) {
             return u;
         }
         return null;

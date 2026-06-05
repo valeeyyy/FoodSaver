@@ -57,6 +57,19 @@ public class DonationPool {
         queue.remove(d);
     }
 
+    public int purgeExpired() {
+        int count = 0;
+        Iterator<FoodDonation> it = queue.iterator();
+        while (it.hasNext()) {
+            FoodDonation d = it.next();
+            if (!d.isStillFresh()) {
+                it.remove();
+                count++;
+            }
+        }
+        return count;
+    }
+
     public void checkAlerts() {
         boolean yellowFired = false;
         List<FoodDonation> toExpire = new ArrayList<>();

@@ -15,9 +15,12 @@ public class GeoUtils {
 
     public static double euclideanKm(double lat1, double lon1,
             double lat2, double lon2) {
-        double dLat = lat2 - lat1;
-        double dLon = lon2 - lon1;
-        return Math.sqrt(dLat * dLat + dLon * dLon) * SystemConfig.KM_PER_DEGREE;
+        // Proposal §16 (GeoUtils): konversi derajat→km dengan koreksi cos(lat)
+        // pada komponen longitude agar jarak lebih akurat di garis lintang lokal.
+        double dLat = (lat2 - lat1) * SystemConfig.KM_PER_DEGREE;
+        double dLon = (lon2 - lon1) * SystemConfig.KM_PER_DEGREE
+                * Math.cos(Math.toRadians(lat1));
+        return Math.sqrt(dLat * dLat + dLon * dLon);
     }
 
     public static long estimateArrivalMs(List<Restaurant> pickups, Shelter shelter) {

@@ -45,6 +45,22 @@ public class FoodExpiryTree {
         }
     }
 
+    // Proposal §8 (FoodExpiryTree): menghapus semua donasi yang sudah lewat
+    // waktu expiry dari tree, mengembalikan jumlah yang dibersihkan.
+    public int purgeExpired() {
+        int count = 0;
+        LocalDateTime now = LocalDateTime.now();
+        var it = tree.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<LocalDateTime, List<FoodDonation>> entry = it.next();
+            if (entry.getKey().isBefore(now)) {
+                count += entry.getValue().size();
+                it.remove();
+            }
+        }
+        return count;
+    }
+
     public int size() {
         return tree.values().stream().mapToInt(List::size).sum();
     }

@@ -44,13 +44,13 @@ public class FoodSaverApp {
         String username = readNonEmpty(sc, "Username : ");
         String password = readNonEmpty(sc, "Password : ");
 
-        User user = ctx.findUser(username, password);
-        if (user == null) {
-            System.out.println("[✗] Username atau password salah.");
+        User user = ctx.userMap.get(username);
+        if (user != null && user.getAccountStatus() == AccountStatus.REJECTED) {
+            System.out.println("[✗] Akun Anda telah ditolak oleh admin. Silakan hubungi admin.");
             return;
         }
-        if (user.getAccountStatus() == AccountStatus.REJECTED) {
-            System.out.println("[✗] Akun Anda telah ditolak oleh admin. Silakan hubungi admin.");
+        if (user == null || !user.login(username, password)) {
+            System.out.println("[✗] Username atau password salah.");
             return;
         }
         if (user.getAccountStatus() == AccountStatus.PENDING) {
