@@ -42,6 +42,11 @@ public class DeliveryOrder {
         this.statusTimeline.add("[" + createdAt.format(FMT) + "] WAITING_PICKUP");
     }
 
+    public void setStatusSilent(OrderStatus target) {
+        this.status = target;
+        this.statusTimeline.add(createdAt.format(FMT) + " → " + target);
+    }
+
     public void advanceStatus() {
         switch (status) {
             case WAITING_PICKUP -> {

@@ -26,18 +26,6 @@ public abstract class User {
         this.registeredAt = LocalDateTime.now();
     }
 
-    public boolean login(String inputUsername, String inputPassword) {
-        if (accountStatus == AccountStatus.REJECTED) {
-            System.out.println("[✗] Login ditolak — akun Anda telah DITOLAK oleh admin.");
-            return false;
-        }
-        if (accountStatus == AccountStatus.PENDING) {
-            System.out.println("[!] Akun Anda masih menunggu verifikasi admin.");
-            return false;
-        }
-        return this.username.equals(inputUsername) && this.password.equals(inputPassword);
-    }
-
     public void logout() {
         System.out.println("[✓] Logout berhasil. Sampai jumpa, " + username + "!");
     }
@@ -84,16 +72,6 @@ public abstract class User {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    private boolean verified = false;
-
-    public boolean isVerified() {
-        return verified;
-    }
-
-    public void setVerified(boolean verified) {
-        this.verified = verified;
     }
 
     private EditRequest pendingEditRequest = null;

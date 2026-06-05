@@ -104,7 +104,6 @@ public class Menu {
     public static void showAdmin(AppContext ctx, Scanner sc, Admin admin) {
         boolean running = true;
         while (running) {
-            ctx.pool.checkAlerts();
             FoodSaverApp.printHeader("MENU ADMIN — " + admin.getUsername());
             System.out.println("  [0] Dashboard Ringkasan");
             System.out.println("  [1] Lihat & verifikasi akun pending");

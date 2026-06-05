@@ -53,18 +53,6 @@ public class DonationPool {
                 .orElse(null);
     }
 
-    public int purgeExpired() {
-        List<FoodDonation> toRemove = new ArrayList<>();
-        for (FoodDonation d : queue) {
-            if (!d.isStillFresh()) {
-                d.markAsExpired();
-                toRemove.add(d);
-            }
-        }
-        queue.removeAll(toRemove);
-        return toRemove.size();
-    }
-
     public void remove(FoodDonation d) {
         queue.remove(d);
     }
@@ -85,7 +73,9 @@ public class DonationPool {
                 d.markAsExpired();
                 toExpire.add(d);
 
-            } else if (remaining <= yellowAlertMinutes && d.getStatus() == DonationStatus.WAITING) {
+            } else if (remaining <= yellowAlertMinutes && d.getStatus() == DonationStatus.WAITING
+                    && !d.isYellowAlertFired()) {
+                d.setYellowAlertFired(true);
                 Notification yellow = Notification.createYellowAlert(d.getDonationId());
                 yellow.display();
                 if (auditLog != null) {

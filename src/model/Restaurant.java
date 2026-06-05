@@ -27,6 +27,10 @@ public class Restaurant extends User {
         this.donations = new LinkedList<>();
     }
 
+    public void addDonation(FoodDonation d) {
+        donations.add(d);
+    }
+
     public void postDonation(FoodDonation d) {
         if (accountStatus != AccountStatus.APPROVED) {
             System.out.println("[✗] Akun belum diverifikasi. Tidak dapat memposting donasi.");

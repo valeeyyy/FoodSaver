@@ -13,11 +13,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 public class Admin extends User {
-
-    private final int adminLevel;
 
     private final DonationPool pool;
     private final ShelterRegistry registry;
@@ -31,7 +28,6 @@ public class Admin extends User {
             DeliveryHistory history, AuditLog auditLog,
             Map<String, User> userMap) {
         super(username, password, "—", "—");
-        this.adminLevel = 1;
         this.accountStatus = AccountStatus.APPROVED;
         this.pool = pool;
         this.registry = registry;

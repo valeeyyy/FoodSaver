@@ -15,6 +15,7 @@ public class FoodDonation {
     private String notes;
     private DonationStatus status;
     private Restaurant restaurant;
+    private boolean yellowAlertFired = false;
 
     public FoodDonation(String foodName, int portions,
             LocalDateTime cookedAt, String notes,
@@ -92,6 +93,9 @@ public class FoodDonation {
     public Restaurant getRestaurant() {
         return restaurant;
     }
+
+    public boolean isYellowAlertFired() { return yellowAlertFired; }
+    public void setYellowAlertFired(boolean v) { yellowAlertFired = v; }
 
     public void setPortions(int p) {
         this.portions = p;

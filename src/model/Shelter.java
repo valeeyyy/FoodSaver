@@ -2,6 +2,7 @@ package model;
 
 import enums.ShelterType;
 import java.time.LocalDateTime;
+import util.SystemConfig;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,6 +33,8 @@ public class Shelter extends User {
         this.residents = residents;
         this.shelterType = shelterType;
         this.portionsToday = 0;
+        this.receptionStartHour = SystemConfig.DEFAULT_RECEPTION_START_HOUR;
+        this.receptionEndHour = SystemConfig.DEFAULT_RECEPTION_END_HOUR;
         this.receiptHistory = new LinkedList<>();
     }
 

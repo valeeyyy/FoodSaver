@@ -36,23 +36,6 @@ public class FoodExpiryTree {
         return list.isEmpty() ? null : list.get(0);
     }
 
-    public int purgeExpired() {
-        LocalDateTime now = LocalDateTime.now();
-        List<LocalDateTime> expiredKeys = new ArrayList<>();
-        int count = 0;
-        for (Map.Entry<LocalDateTime, List<FoodDonation>> entry : tree.entrySet()) {
-            if (entry.getKey().isBefore(now)) {
-                count += entry.getValue().size();
-                expiredKeys.add(entry.getKey());
-            } else {
-                break;
-            }
-        }
-        for (LocalDateTime k : expiredKeys)
-            tree.remove(k);
-        return count;
-    }
-
     public void remove(FoodDonation d) {
         List<FoodDonation> bucket = tree.get(d.getExpiredAt());
         if (bucket != null) {

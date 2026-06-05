@@ -10,6 +10,7 @@ public class FoodSaverApp {
         Scanner sc = new Scanner(System.in);
         AppContext ctx = new AppContext();
         ctx.startup();
+        ctx.seedDummyData();
 
         boolean running = true;
         while (running) {

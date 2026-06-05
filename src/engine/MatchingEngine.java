@@ -14,6 +14,10 @@ import util.SystemConfig;
 
 public class MatchingEngine implements Notifiable {
 
+    private static final String BOX_TOP = "┌─── DELIVERY ORDER DIBUAT " + "─".repeat(36) + "┐";
+    private static final String BOX_BOT = "└" + "─".repeat(62) + "┘";
+    private static final String ROW_FMT = "│  %-10s: %-48s│";
+
     private final DonationPool pool;
     private final ShelterRegistry registry;
     private final FoodExpiryTree expiryTree;
@@ -35,66 +39,59 @@ public class MatchingEngine implements Notifiable {
     }
 
     public void runWithExpandedRadius() {
-        System.out.println("[MatchingEngine] Menjalankan matching dengan radius diperluas: "
-                + SystemConfig.EXPANDED_RADIUS_KM + " km");
+        System.out.println("[Engine] Radius diperluas ke " + SystemConfig.EXPANDED_RADIUS_KM + " km");
         runWithRadius(SystemConfig.EXPANDED_RADIUS_KM);
     }
 
     private void runWithRadius(double radiusKm) {
-        System.out.println("\n=== MATCHING ENGINE (radius=" + radiusKm + "km) ===");
+        System.out.println("\n=== MATCHING ENGINE (radius=" + radiusKm + " km) ===");
 
-        List<Shelter> eligibleShelters = registry.findAllEligible();
-        if (eligibleShelters.isEmpty()) {
-            System.out.println("[!] Tidak ada panti yang membutuhkan donasi saat ini.");
-            return;
-        }
+        while (true) {
+            List<Shelter> eligible = registry.findAllEligible();
+            if (eligible.isEmpty()) {
+                System.out.println("[!] Tidak ada panti yang membutuhkan donasi.");
+                break;
+            }
 
-        List<FoodDonation> activeDonations = expiryTree.getByPriority();
-        if (activeDonations.isEmpty()) {
-            System.out.println("[!] Tidak ada donasi aktif di antrian.");
-            return;
-        }
+            List<FoodDonation> active = expiryTree.getByPriority();
+            if (active.isEmpty()) {
+                System.out.println("[!] Tidak ada donasi aktif.");
+                break;
+            }
 
-        List<DonationBundle> bundles = generateCombinations(activeDonations);
-
-        List<MatchOption> validOptions = new ArrayList<>();
-        for (DonationBundle bundle : bundles) {
-            for (Shelter shelter : eligibleShelters) {
-                if (applyFilters(bundle, shelter, radiusKm)) {
-                    double routeKm = GeoUtils.getTotalRouteKm(
-                            bundle.getRestaurantList(), shelter);
-                    long arrivalMs = GeoUtils.estimateArrivalMs(
-                            bundle.getRestaurantList(), shelter);
-                    validOptions.add(new MatchOption(bundle, shelter, routeKm, arrivalMs));
+            List<MatchOption> options = new ArrayList<>();
+            for (DonationBundle bundle : generateCombinations(active)) {
+                for (Shelter shelter : eligible) {
+                    if (applyFilters(bundle, shelter, radiusKm)) {
+                        double km = GeoUtils.getTotalRouteKm(bundle.getRestaurantList(), shelter);
+                        long ms = GeoUtils.estimateArrivalMs(bundle.getRestaurantList(), shelter);
+                        options.add(new MatchOption(bundle, shelter, km, ms));
+                    }
                 }
             }
-        }
 
-        if (validOptions.isEmpty()) {
-            System.out.println("[✗] Tidak ada kombinasi donasi-panti yang valid saat ini.");
-            return;
-        }
+            if (options.isEmpty()) {
+                System.out.println("[✗] Tidak ada pasangan donasi-panti yang valid.");
+                break;
+            }
 
-        MatchOption winner = scoreAndSelect(validOptions);
-        System.out.println("[✓] Match ditemukan: " + winner);
+            MatchOption winner = scoreAndSelect(options);
+            System.out.println("[✓] Match ditemukan: " + winner);
+            DeliveryOrder order = createDeliveryOrder(winner);
+            history.addFirst(order);
 
-        DeliveryOrder order = createDeliveryOrder(winner);
-        history.addFirst(order);
+            for (FoodDonation d : winner.getBundle().getDonations()) {
+                d.markAsMatched();
+                pool.remove(d);
+                expiryTree.remove(d);
+            }
 
-        for (FoodDonation d : winner.getBundle().getDonations()) {
-            d.markAsMatched();
-            pool.remove(d);
-            expiryTree.remove(d);
-        }
+            int portionsDelivered = winner.getBundle().getTotalPortions()
+                    - Math.max(0, winner.getPortionSurplus());
+            winner.getShelter().addPortionsToday(portionsDelivered);
+            onMatchFound(order);
 
-        int portionsDelivered = winner.getBundle().getTotalPortions() - winner.getPortionSurplus();
-        winner.getShelter().addPortionsToday(portionsDelivered);
-
-        onMatchFound(order);
-
-        if (!pool.isEmpty()) {
-            System.out.println("[MatchingEngine] Mencoba mencocokkan donasi tersisa...");
-            runWithRadius(radiusKm);
+            if (pool.isEmpty()) break;
         }
     }
 
@@ -117,11 +114,11 @@ public class MatchingEngine implements Notifiable {
         long arrivalMs = GeoUtils.estimateArrivalMs(bundle.getRestaurantList(), shelter);
         return filterPortions(bundle, shelter)
                 && filterDistance(bundle, shelter, radiusKm)
-                && filterFreshness(bundle, arrivalMs, shelter); // ← passing shelter
+                && filterFreshness(bundle, arrivalMs, shelter);
     }
 
     boolean filterPortions(DonationBundle bundle, Shelter shelter) {
-        return bundle.getTotalPortions() >= shelter.getRemainingNeed();
+        return bundle.getTotalPortions() > 0;
     }
 
     boolean filterDistance(DonationBundle bundle, Shelter shelter, double radiusKm) {
@@ -153,13 +150,20 @@ public class MatchingEngine implements Notifiable {
     }
 
     private boolean isBetter(MatchOption a, MatchOption b) {
-        if (a.getTotalRouteKm() != b.getTotalRouteKm())
+        // P1: rute terpendek
+        if (Math.abs(a.getTotalRouteKm() - b.getTotalRouteKm()) > SystemConfig.DOUBLE_EPSILON)
             return a.getTotalRouteKm() < b.getTotalRouteKm();
+        // P2: penghuni terbanyak
         if (a.getResidentsServed() != b.getResidentsServed())
             return a.getResidentsServed() > b.getResidentsServed();
+        // P3: paling cepat expired
         if (!a.getEarliestExpiry().equals(b.getEarliestExpiry()))
             return a.getEarliestExpiry().isBefore(b.getEarliestExpiry());
-        return a.getPortionSurplus() < b.getPortionSurplus();
+        // P4: surplus terkecil; pengiriman penuh diutamakan atas parsial
+        int sa = a.getPortionSurplus(), sb = b.getPortionSurplus();
+        if (sa >= 0 && sb < 0) return true;
+        if (sa < 0 && sb >= 0) return false;
+        return Math.abs(sa) < Math.abs(sb);
     }
 
     DeliveryOrder createDeliveryOrder(MatchOption winner) {
@@ -171,17 +175,19 @@ public class MatchingEngine implements Notifiable {
         DeliveryOrder order = new DeliveryOrder(
                 winner.getBundle(),
                 winner.getShelter(),
-                "KURIR-01",
+                SystemConfig.COURIER_ID,
                 arrivalMs,
                 Math.max(0, surplus));
 
-        System.out.println("\n=== DELIVERY ORDER DIBUAT ===");
-        System.out.println("  ID Order  : " + order.getOrderId());
-        System.out.println("  Tujuan    : " + winner.getShelter().getName());
-        System.out.printf("  Jarak     : %.2f km dari restoran ke panti%n", winner.getTotalRouteKm());
-        System.out.printf("  Estimasi  : %.0f menit%n", arrivalMs / 60000.0);
-        System.out.println("  Surplus   : " + Math.max(0, surplus) + " porsi");
-        System.out.println("  Status    : WAITING_PICKUP");
+        System.out.println();
+        System.out.println(BOX_TOP);
+        System.out.printf(ROW_FMT + "%n", "ID Order", order.getOrderId());
+        System.out.printf(ROW_FMT + "%n", "Tujuan", winner.getShelter().getName());
+        System.out.printf(ROW_FMT + "%n", "Jarak", String.format("%.2f km", winner.getTotalRouteKm()));
+        System.out.printf(ROW_FMT + "%n", "Estimasi", String.format("%.0f menit", arrivalMs / 60000.0));
+        System.out.printf(ROW_FMT + "%n", "Surplus", Math.max(0, surplus) + " porsi");
+        System.out.printf(ROW_FMT + "%n", "Status", "WAITING_PICKUP");
+        System.out.println(BOX_BOT);
 
         return order;
     }

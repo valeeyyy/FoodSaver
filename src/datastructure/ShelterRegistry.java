@@ -1,5 +1,6 @@
 package datastructure;
 
+import enums.AccountStatus;
 import model.Shelter;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class ShelterRegistry {
     public List<Shelter> findAllEligible() {
         List<Shelter> result = new ArrayList<>();
         for (Shelter s : map.values()) {
-            if (s.canReceiveMore())
+            if (s.getAccountStatus() == AccountStatus.APPROVED && s.canReceiveMore())
                 result.add(s);
         }
         return result;

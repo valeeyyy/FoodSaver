@@ -15,9 +15,9 @@ public class GeoUtils {
 
     public static double euclideanKm(double lat1, double lon1,
             double lat2, double lon2) {
-        double dLat = (lat2 - lat1) * 111.0;
-        double dLon = (lon2 - lon1) * 111.0 * Math.cos(Math.toRadians(lat1));
-        return Math.sqrt(dLat * dLat + dLon * dLon);
+        double dLat = lat2 - lat1;
+        double dLon = lon2 - lon1;
+        return Math.sqrt(dLat * dLat + dLon * dLon) * SystemConfig.KM_PER_DEGREE;
     }
 
     public static long estimateArrivalMs(List<Restaurant> pickups, Shelter shelter) {
