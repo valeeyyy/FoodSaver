@@ -248,7 +248,7 @@ public class Menu {
         }
         FoodSaverApp.printHeader("DONASI TIDAK TERSALURKAN");
         for (FoodDonation d : unmatched)
-            System.out.printf("  %s | %-20s | %3d porsi | sisa %d mnt | dari: %s%n",
+            System.out.printf("  %s | %-25s | %3d porsi | sisa %d mnt | dari: %s%n",
                     d.getDonationId(), d.getFoodName(), d.getPortions(),
                     d.getRemainingMinutes(), d.getRestaurant().getName());
     }
@@ -265,7 +265,7 @@ public class Menu {
         FoodSaverApp.printHeader("STOK DONASI AKTIF");
         for (FoodDonation d : active) {
             Restaurant r = d.getRestaurant();
-            System.out.printf("  %s | %-20s | %3d porsi | expired: %s | sisa: %d mnt%n",
+            System.out.printf("  %s | %-25s | %3d porsi | expired: %s | sisa: %d mnt%n",
                     d.getDonationId(), d.getFoodName(), d.getPortions(),
                     d.getExpiredAt().format(TM_FMT), d.getRemainingMinutes());
 
@@ -478,7 +478,7 @@ public class Menu {
         }
         FoodSaverApp.printHeader("DONASI — " + status);
         for (FoodDonation d : results)
-            System.out.printf("  %s | %-20s | %3d porsi | dari: %s%n",
+            System.out.printf("  %s | %-25s | %3d porsi | dari: %s%n",
                     d.getDonationId(), d.getFoodName(),
                     d.getPortions(), d.getRestaurant().getName());
     }
@@ -508,7 +508,7 @@ public class Menu {
         if (!redAlerts.isEmpty()) {
             System.out.println("\n  🔴 RED ALERT — donasi dalam buffer 30 menit terakhir:");
             for (FoodDonation d : redAlerts) {
-                System.out.printf("    %s | %-20s | sisa ~%d menit | expired: %s%n",
+                System.out.printf("    %s | %-25s | sisa ~%d menit | expired: %s%n",
                         d.getDonationId(), d.getFoodName(),
                         d.getRemainingMinutes(),
                         d.getExpiredAt().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
@@ -518,7 +518,7 @@ public class Menu {
         if (!yellowAlerts.isEmpty()) {
             System.out.println("\n  🟡 YELLOW ALERT — donasi < 2 jam sebelum expired:");
             for (FoodDonation d : yellowAlerts) {
-                System.out.printf("    %s | %-20s | sisa ~%d menit | expired: %s%n",
+                System.out.printf("    %s | %-25s | sisa ~%d menit | expired: %s%n",
                         d.getDonationId(), d.getFoodName(),
                         d.getRemainingMinutes(),
                         d.getExpiredAt().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
@@ -620,7 +620,7 @@ public class Menu {
             System.out.println("\n--- Kesegaran Donasi dalam Bundle ---");
             for (FoodDonation d : order.getBundle().getDonations()) {
                 long menit = d.getRemainingMinutes();
-                System.out.printf("  %s | %-20s | Sisa: %d menit | Status: %s%n",
+                System.out.printf("  %s | %-25s | Sisa: %d menit | Status: %s%n",
                         d.getDonationId(), d.getFoodName(), menit, d.getStatus());
             }
         }
@@ -801,7 +801,7 @@ public class Menu {
         }
         FoodSaverApp.printHeader("RIWAYAT DONASI — " + restaurant.getName());
         for (FoodDonation d : history)
-            System.out.printf("  %s | %-20s | %3d porsi | status: %s%n",
+            System.out.printf("  %s | %-25s | %3d porsi | status: %s%n",
                     d.getDonationId(), d.getFoodName(), d.getPortions(), d.getStatus());
     }
 
