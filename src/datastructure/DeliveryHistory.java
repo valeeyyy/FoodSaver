@@ -12,7 +12,7 @@ public class DeliveryHistory {
 
     private final LinkedList<DeliveryOrder> history;
     private final LinkedList<FoodDonation> wastedHistory;
-    private final LinkedList<FoodDonation> expiredHistory; 
+    private final LinkedList<FoodDonation> expiredHistory;
 
     public DeliveryHistory() {
         this.history = new LinkedList<>();

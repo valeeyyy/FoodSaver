@@ -11,6 +11,7 @@ public class MatchOption {
     private double totalRouteKm;
     private long arrivalMs;
     private int portionSurplus;
+    private int residentsServed;
 
     public MatchOption(DonationBundle bundle, Shelter shelter, double totalRouteKm, long arrivalMs) {
         this.bundle = bundle;
@@ -18,6 +19,7 @@ public class MatchOption {
         this.totalRouteKm = totalRouteKm;
         this.arrivalMs = arrivalMs;
         this.portionSurplus = bundle.getTotalPortions() - shelter.getRemainingNeed();
+        this.residentsServed = Math.min(bundle.getTotalPortions(), shelter.getRemainingNeed());
     }
 
     public double getTotalRouteKm() {
@@ -25,7 +27,7 @@ public class MatchOption {
     }
 
     public int getResidentsServed() {
-        return shelter.getResidents();
+        return residentsServed;
     }
 
     public LocalDateTime getEarliestExpiry() {
@@ -50,7 +52,7 @@ public class MatchOption {
 
     @Override
     public String toString() {
-        return "MatchOption { " + "bundleId = " + bundle.getBundleId() + ", shelter = '" + shelter.getName() + 
+        return "MatchOption { " + "bundleId = " + bundle.getBundleId() + ", shelter = '" + shelter.getName() +
         "'" + ", routeKm = " + totalRouteKm + ", surplus = " + portionSurplus + " }";
     }
 

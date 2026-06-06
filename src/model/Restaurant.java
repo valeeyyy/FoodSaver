@@ -55,19 +55,20 @@ public class Restaurant extends User {
         System.out.println("[✗] Donasi dengan ID " + donationId + " tidak ditemukan.");
     }
 
-    public void editPortions(String donationId, int newPortions) {
+    public boolean editPortions(String donationId, int newPortions) {
         for (FoodDonation d : donations) {
             if (d.getDonationId().equals(donationId)) {
                 if (d.getStatus() != DonationStatus.WAITING) {
                     System.out.println("[✗] Donasi tidak bisa diubah (status: " + d.getStatus() + ").");
-                    return;
+                    return false;
                 }
                 d.setPortions(newPortions);
                 System.out.println("[✓] Jumlah porsi diperbarui menjadi " + newPortions + ".");
-                return;
+                return true;
             }
         }
         System.out.println("[✗] Donasi tidak ditemukan.");
+        return false;
     }
 
     public List<FoodDonation> viewDonationHistory() {

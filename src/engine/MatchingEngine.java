@@ -6,6 +6,7 @@ import datastructure.DonationPool;
 import datastructure.FoodExpiryTree;
 import datastructure.ShelterRegistry;
 import enums.ActionType;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import model.*;
@@ -86,8 +87,7 @@ public class MatchingEngine implements Notifiable {
                 expiryTree.remove(d);
             }
 
-            int portionsDelivered = winner.getBundle().getTotalPortions()
-                    - Math.max(0, winner.getPortionSurplus());
+            int portionsDelivered = winner.getResidentsServed();
             winner.getShelter().addPortionsToday(portionsDelivered);
             onMatchFound(order);
 
@@ -112,14 +112,14 @@ public class MatchingEngine implements Notifiable {
     }
 
     boolean applyFilters(DonationBundle bundle, Shelter shelter, double radiusKm) {
-        long arrivalMs = GeoUtils.estimateArrivalMs(bundle.getRestaurantList(), shelter);
         return filterPortions(bundle, shelter)
                 && filterDistance(bundle, shelter, radiusKm)
+                && filterTravelTime(bundle, shelter)
                 && filterFreshness(bundle, bundle.getRestaurantList(), shelter);
     }
 
     boolean filterPortions(DonationBundle bundle, Shelter shelter) {
-        return bundle.getTotalPortions() > 0;
+        return bundle.getTotalPortions() >= shelter.getRemainingNeed();
     }
 
     boolean filterDistance(DonationBundle bundle, Shelter shelter, double radiusKm) {
@@ -130,6 +130,12 @@ public class MatchingEngine implements Notifiable {
                 return false;
         }
         return true;
+    }
+
+    boolean filterTravelTime(DonationBundle bundle, Shelter shelter) {
+        long arrivalMs = GeoUtils.estimateArrivalMs(bundle.getRestaurantList(), shelter);
+        LocalDateTime arrival = LocalDateTime.now().plusSeconds(arrivalMs / 1000);
+        return !arrival.isAfter(bundle.getEarliestExpiry());
     }
 
     boolean filterFreshness(DonationBundle bundle, List<Restaurant> pickups, Shelter shelter) {
@@ -151,12 +157,20 @@ public class MatchingEngine implements Notifiable {
     }
 
     private boolean isBetter(MatchOption a, MatchOption b) {
-        if (Math.abs(a.getTotalRouteKm() - b.getTotalRouteKm()) > SystemConfig.DOUBLE_EPSILON)
-            return a.getTotalRouteKm() < b.getTotalRouteKm();
+        double aKm = a.getTotalRouteKm();
+        double bKm = b.getTotalRouteKm();
+
+        if (aKm < bKm)
+            return true;
+        if (aKm > bKm)
+            return false;
+
         if (a.getResidentsServed() != b.getResidentsServed())
             return a.getResidentsServed() > b.getResidentsServed();
+
         if (!a.getEarliestExpiry().equals(b.getEarliestExpiry()))
             return a.getEarliestExpiry().isBefore(b.getEarliestExpiry());
+
         int sa = a.getPortionSurplus(), sb = b.getPortionSurplus();
         if (sa >= 0 && sb < 0)
             return true;
@@ -166,10 +180,8 @@ public class MatchingEngine implements Notifiable {
     }
 
     DeliveryOrder createDeliveryOrder(MatchOption winner) {
-        long arrivalMs = GeoUtils.estimateArrivalMs(
-                winner.getBundle().getRestaurantList(), winner.getShelter());
-        int surplus = winner.getBundle().getTotalPortions()
-                - winner.getShelter().getRemainingNeed();
+        long arrivalMs = winner.getArrivalMs();
+        int surplus = winner.getPortionSurplus();
 
         DeliveryOrder order = new DeliveryOrder(
                 winner.getBundle(),
@@ -198,8 +210,8 @@ public class MatchingEngine implements Notifiable {
 
     @Override
     public void onDonationExpired(FoodDonation d) {
-        System.out.printf("[EXPIRED] Donasi %s (%s) telah kadaluarsa.%n",
-                d.getDonationId(), d.getFoodName());
+        sendAlert("Donasi " + d.getDonationId() + " (" + d.getFoodName()
+                + ") telah kadaluarsa tanpa tersalurkan.");
         auditLog.log(new AuditEntry("SYSTEM", ActionType.EXPIRE,
                 d.getDonationId(), "Expired without delivery",
                 enums.DonationStatus.EXPIRED_UNDELIVERED));

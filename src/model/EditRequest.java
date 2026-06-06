@@ -1,7 +1,9 @@
 package model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class EditRequest {
@@ -36,6 +38,30 @@ public class EditRequest {
 
     public Map<String, String> getNewData() {
         return newData;
+    }
+
+    public List<String> getChangeSummary() {
+        List<String> lines = new ArrayList<>();
+        for (Map.Entry<String, String> e : newData.entrySet()) {
+            String k = e.getKey();
+            String label = switch (k) {
+                case "name" -> "Nama";
+                case "owner" -> "Nama pemilik";
+                case "manager" -> "Nama pengurus";
+                case "address" -> "Alamat";
+                case "lat" -> "Koordinat lat";
+                case "lon" -> "Koordinat lon";
+                case "category" -> "Jenis makanan";
+                case "residents" -> "Jumlah penghuni";
+                case "type" -> "Tipe panti";
+                case "phone" -> "No. HP";
+                case "password" -> "Password";
+                default -> k;
+            };
+            String display = k.equals("password") ? "****" : e.getValue();
+            lines.add(label + ": " + display);
+        }
+        return lines;
     }
 
     public EditStatus getStatus() {

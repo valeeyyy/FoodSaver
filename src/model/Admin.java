@@ -166,7 +166,7 @@ public class Admin extends User {
         for (DeliveryOrder o : allOrders) {
             if (o.getStatus() == OrderStatus.DELIVERED) {
                 deliveredCount++;
-                deliveredPortions += o.getBundle().getTotalPortions() - o.getPortionSurplus();
+                deliveredPortions += o.getPortionsReceived();
             }
         }
 

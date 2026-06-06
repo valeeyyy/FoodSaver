@@ -123,6 +123,10 @@ public class DeliveryOrder {
         return portionSurplus;
     }
 
+    public int getPortionsReceived() {
+        return bundle.getTotalPortions() - portionSurplus;
+    }
+
     public int getRating() {
         return rating;
     }

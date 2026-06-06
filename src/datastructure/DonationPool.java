@@ -48,9 +48,12 @@ public class DonationPool {
     }
 
     public FoodDonation peekEarliest() {
-        return queue.stream()
-                .min((a, b) -> a.getExpiredAt().compareTo(b.getExpiredAt()))
-                .orElse(null);
+        FoodDonation earliest = null;
+        for (FoodDonation d : queue) {
+            if (earliest == null || d.getExpiredAt().isBefore(earliest.getExpiredAt()))
+                earliest = d;
+        }
+        return earliest;
     }
 
     public void remove(FoodDonation d) {
@@ -83,6 +86,9 @@ public class DonationPool {
                     auditLog.log(red.toAuditEntry());
                 }
                 d.markAsExpired();
+                if (engine != null) {
+                    engine.onDonationExpired(d);
+                }
                 toExpire.add(d);
 
             } else if (remaining <= yellowAlertMinutes && d.getStatus() == DonationStatus.WAITING

@@ -62,7 +62,11 @@ public class FoodExpiryTree {
     }
 
     public int size() {
-        return tree.values().stream().mapToInt(List::size).sum();
+        int total = 0;
+        for (List<FoodDonation> bucket : tree.values()) {
+            total += bucket.size();
+        }
+        return total;
     }
 
     public boolean isEmpty() {
