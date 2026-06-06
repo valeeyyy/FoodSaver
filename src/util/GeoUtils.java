@@ -1,8 +1,6 @@
 package util;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import model.FoodDonation;
 import model.Restaurant;
@@ -31,15 +29,12 @@ public class GeoUtils {
         return (long) (totalMinutes * 60 * 1000);
     }
 
-    public static boolean isSafeToDeliver(FoodDonation d, long arrivalMs, Shelter shelter) {
-        long expiredEpoch = d.getExpiredAt()
-                .minusMinutes(SystemConfig.FRESHNESS_BUFFER_MIN)
-                .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        long arrivalEpoch = System.currentTimeMillis() + arrivalMs;
-        if (arrivalEpoch > expiredEpoch)
+    public static boolean isSafeToDeliver(FoodDonation d, List<Restaurant> pickups, Shelter shelter) {
+        long arrivalMs = estimateArrivalMs(pickups, shelter);
+        LocalDateTime arrivalTime = LocalDateTime.now().plusSeconds(arrivalMs / 1000);
+        LocalDateTime deadline = d.getExpiredAt().minusMinutes((long) SystemConfig.FRESHNESS_BUFFER_MIN);
+        if (arrivalTime.isAfter(deadline))
             return false;
-        LocalDateTime arrivalTime = LocalDateTime.ofInstant(
-                Instant.ofEpochMilli(arrivalEpoch), ZoneId.systemDefault());
         return shelter.isOpenAt(arrivalTime);
     }
 
