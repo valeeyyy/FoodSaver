@@ -2,7 +2,6 @@ package model;
 
 import enums.ActionType;
 import enums.AlertType;
-import util.IdGenerator;
 import util.SystemConfig;
 
 import java.time.LocalDateTime;

@@ -44,9 +44,6 @@ public class AppContext {
     }
 
     void seedDummyData() {
-        // ===== RESTAURANTS =====
-        // Catatan: r[3] "Warung Tegal Pak Joko" sengaja ditempatkan >5km dari semua panti
-        // tapi dalam 8km dari Panti Lansia — sehingga donasi d3 memicu YELLOW ALERT.
         Restaurant[] r = {
             new Restaurant("Warung Nasi Berkah", "Budi Santoso",
                 "warung_berkah", "berkah123",

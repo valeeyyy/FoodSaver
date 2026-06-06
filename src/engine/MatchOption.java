@@ -1,5 +1,6 @@
 package engine;
 
+import java.time.LocalDateTime;
 import model.DonationBundle;
 import model.Shelter;
 
@@ -27,7 +28,7 @@ public class MatchOption {
         return shelter.getResidents();
     }
 
-    public java.time.LocalDateTime getEarliestExpiry() {
+    public LocalDateTime getEarliestExpiry() {
         return bundle.getEarliestExpiry();
     }
 

@@ -4,7 +4,6 @@ import enums.AccountStatus;
 import util.IdGenerator;
 
 import java.time.LocalDateTime;
-import model.EditRequest;
 
 public abstract class User {
 

@@ -1,6 +1,5 @@
 package model;
 
-import enums.ActionType;
 import enums.DonationStatus;
 import enums.OrderStatus;
 import util.IdGenerator;
