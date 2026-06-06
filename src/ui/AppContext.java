@@ -27,6 +27,8 @@ public class AppContext {
     public final MatchingEngine engine;
     public final Admin admin;
 
+    private int donationCounter = 0;
+
     public AppContext() {
         registry = new ShelterRegistry();
         expiryTree = new FoodExpiryTree();
@@ -110,7 +112,6 @@ public class AppContext {
                 "Registered: " + pendingShelter.getName() + " (PENDING)");
 
         System.out.println("[✓] 5 restoran + 5 panti (APPROVED) + 1 panti PENDING (perlu verifikasi).");
-        System.out.println();
 
         FoodDonation d1 = new FoodDonation("Nasi Putih + Ayam Goreng", 90,
                 LocalDateTime.now().minusHours(2), "Masih hangat, baru dimasak siang", r[0]);
@@ -140,6 +141,12 @@ public class AppContext {
         r[1].postDonation(d5);
         submitDonation(d5);
 
+        FoodDonation dExpired = new FoodDonation("Soto Ayam Kemarin", 25,
+                LocalDateTime.now().minusHours(7),
+                "Sisa dari sesi sebelumnya - sudah tidak segar", r[0]);
+        r[0].postDonation(dExpired);
+        submitExpiredDonation(dExpired);
+
         System.out.println();
         System.out.println("┌─────────────────────────────────────────────────────────────┐");
         System.out.println("│               [✓] DUMMY DATA BERHASIL DIMUAT                │");
@@ -151,6 +158,7 @@ public class AppContext {
         System.out.printf("│ %-21s│ %-17s│ %-18s│%n", "Mie Ayam", "YELLOW ALERT", "~1.5 jam");
         System.out.printf("│ %-21s│ %-17s│ %-18s│%n", "Nasi Box", "NORMAL", "~1 jam");
         System.out.printf("│ %-21s│ %-17s│ %-18s│%n", "Bakso Kuah", "RED ALERT", "~20 menit");
+        System.out.printf("│ %-21s│ %-17s│ %-18s│%n", "Soto Ayam Kemarin", "WASTED", "EXPIRED");
         System.out.println("└──────────────────────┴──────────────────┴───────────────────┘");
         System.out.printf("  ⚠ Panti PENDING menunggu verifikasi: %s (login: %s / mandiri123)%n",
                 pendingShelter.getName(), pendingShelter.getUsername());
@@ -181,14 +189,15 @@ public class AppContext {
             history.addWasted(d);
         }
 
-        if (!toClean.isEmpty()) {
-            System.out.println("[!] " + toClean.size() + " donasi expired dipindahkan ke riwayat (WASTED).");
-        }
-
-        System.out.println("[✓] Startup selesai. Login sebagai: " + SystemConfig.ADMIN_USERNAME + "\n");
+        System.out.println("[✓] Startup selesai.\n");
     }
 
     public void submitDonation(FoodDonation d) {
+        donationCounter++;
+        System.out.println("\n" + "═".repeat(70));
+        System.out.println("  📦 DONASI #" + donationCounter + " — " + d.getFoodName() + " (" + d.getPortions() + " porsi)");
+        System.out.println("═".repeat(70));
+
         pool.enqueue(d);
         expiryTree.insert(d);
         auditLog.log(d.getRestaurant().getUsername(), ActionType.POST,
@@ -196,9 +205,24 @@ public class AppContext {
 
         pool.purgeExpired();
         expiryTree.purgeExpired();
-        System.out.println("\n[MatchingEngine] Donasi baru masuk — menjalankan matching...");
+        System.out.println("[MatchingEngine] Donasi baru masuk — menjalankan matching...");
         engine.run();
         pool.checkAlerts();
+    }
+
+    public void submitExpiredDonation(FoodDonation d) {
+        donationCounter++;
+        System.out.println("\n" + "━".repeat(70));
+        System.out.println("  ⚠️ DONASI #" + donationCounter + " — " + d.getFoodName() + " (SUDAH EXPIRED - " + d.getPortions() + " porsi)");
+        System.out.println("━".repeat(70));
+
+        pool.enqueue(d);
+        expiryTree.insert(d);
+        auditLog.log(d.getRestaurant().getUsername(), ActionType.POST,
+                d.getDonationId(), "Posted (EXPIRED): " + d.getFoodName());
+
+        System.out.println("[✗] Donasi ini sudah melewati waktu konsumsi — akan diproses saat startup.");
+        System.out.println();
     }
 
     public User findUser(String username, String password) {

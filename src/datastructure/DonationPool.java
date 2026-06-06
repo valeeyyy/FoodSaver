@@ -36,7 +36,7 @@ public class DonationPool {
 
     public void enqueue(FoodDonation d) {
         queue.offer(d);
-        System.out.println("  [Queue] Donasi " + d.getDonationId() + " masuk antrian (size=" + queue.size() + ")");
+        System.out.println("[Queue] Donasi " + d.getDonationId() + " masuk antrian (size=" + queue.size() + ")");
     }
 
     public FoodDonation dequeue() {

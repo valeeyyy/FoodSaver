@@ -43,20 +43,18 @@ public class DeliveryOrder {
 
     public void setStatusSilent(OrderStatus target) {
         this.status = target;
-        this.statusTimeline.add(createdAt.format(FMT) + " → " + target);
+        this.statusTimeline.add("[" + createdAt.format(FMT) + "] → " + target);
     }
 
     public void advanceStatus() {
         switch (status) {
             case WAITING_PICKUP -> {
                 status = OrderStatus.PICKED_UP;
-                statusTimeline.add(LocalDateTime.now().format(FMT) + " → PICKED_UP");
-                System.out.println("[✓] Status diperbarui: PICKED_UP");
+                statusTimeline.add("[" + LocalDateTime.now().format(FMT) + "] PICKED_UP");
             }
             case PICKED_UP -> {
                 status = OrderStatus.IN_TRANSIT;
-                statusTimeline.add(LocalDateTime.now().format(FMT) + " → IN_TRANSIT");
-                System.out.println("[✓] Status diperbarui: IN_TRANSIT");
+                statusTimeline.add("[" + LocalDateTime.now().format(FMT) + "] IN_TRANSIT");
                 checkBundleFreshness();
             }
             default -> System.out.println("[!] Status sudah pada tahap akhir atau menunggu konfirmasi panti.");
@@ -67,7 +65,7 @@ public class DeliveryOrder {
         this.rating = rating;
         this.receiptNotes = notes;
         this.status = OrderStatus.DELIVERED;
-        statusTimeline.add(LocalDateTime.now().format(FMT) + " → DELIVERED (confirmed)");
+        statusTimeline.add("[" + LocalDateTime.now().format(FMT) + "] → DELIVERED (confirmed)");
 
         for (FoodDonation d : bundle.getDonations()) {
             if (d.getStatus() != DonationStatus.WASTED) {

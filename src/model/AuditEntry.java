@@ -64,7 +64,7 @@ public class AuditEntry {
     @Override
     public String toString() {
         String statusPart = (finalStatus != null) ? " | finalStatus=" + finalStatus : "";
-        return String.format("[%s] %-20s | %-15s | %-22s | %s%s",
+        return String.format("[%s] %-14s | %-15s | %-16s | %s%s",
                 timestamp.format(FMT), actor, actionType, targetId, notes, statusPart);
     }
 }

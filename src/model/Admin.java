@@ -149,47 +149,31 @@ public class Admin extends User {
 
         int totalActive = activeDonations.size();
         int waitingCount = 0;
-        int matchedCount = 0;
 
         for (FoodDonation d : activeDonations) {
             if (d.getStatus() == DonationStatus.WAITING)
                 waitingCount++;
-            if (d.getStatus() == DonationStatus.MATCHED)
-                matchedCount++;
         }
-
-        List<DeliveryOrder> allOrders = history.getAll();
 
         int deliveredCount = 0;
         int deliveredPortions = 0;
 
-        for (DeliveryOrder o : allOrders) {
+        for (DeliveryOrder o : history.getAll()) {
             if (o.getStatus() == OrderStatus.DELIVERED) {
-                deliveredCount++;
+                deliveredCount += o.getBundle().getDonations().size();
                 deliveredPortions += o.getPortionsReceived();
             }
         }
 
         int expiredCount = history.getExpiredHistory().size();
         int wastedCount = history.getWastedHistory().size();
+        int incoming = totalActive + deliveredCount + expiredCount + wastedCount;
+        int pendingCount = viewPendingAccounts().size();
 
-        LinkedList<User> pendingAccounts = viewPendingAccounts();
-
-        System.out.println("\n╔══════════════════════════════════════════════════╗");
-        System.out.println("║           📊  DASHBOARD ADMIN — RINGKASAN        ║");
-        System.out.println("╠══════════════════════════════════════════════════╣");
-        System.out.printf("║  Donasi aktif di antrian   : %-20d║%n", totalActive);
-        System.out.printf("║    ↳ Menunggu matching     : %-20d║%n", waitingCount);
-        System.out.printf("║    ↳ Sudah dicocokkan      : %-20d║%n", matchedCount);
-        System.out.println("║──────────────────────────────────────────────────║");
-        System.out.printf("║  Order terselesaikan       : %-20d║%n", deliveredCount);
-        System.out.printf("║  Porsi berhasil disalurkan : %-20d║%n", deliveredPortions);
-        System.out.println("║──────────────────────────────────────────────────║");
-        System.out.printf("║  Donasi expired (tdk sampai)  : %-15d║%n", expiredCount);
-        System.out.printf("║  Donasi wasted (terbuang)     : %-15d║%n", wastedCount);
-        System.out.println("║──────────────────────────────────────────────────║");
-        System.out.printf("║  Akun menunggu verifikasi  : %-20d║%n", pendingAccounts.size());
-        System.out.println("╚══════════════════════════════════════════════════╝");
+        System.out.println("\n📊 DASHBOARD ADMIN — RINGKASAN HARIAN");
+        System.out.printf("   Masuk: %d  |  Tersalurkan: %d (%d porsi)  |  Expired: %d  |  Wasted: %d%n",
+                incoming, deliveredCount, deliveredPortions, expiredCount, wastedCount);
+        System.out.printf("   Menunggu matching: %d  |  Akun pending: %d%n", waitingCount, pendingCount);
     }
 
     public List<User> viewPendingEdits() {

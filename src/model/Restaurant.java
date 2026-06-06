@@ -37,7 +37,7 @@ public class Restaurant extends User {
             return;
         }
         donations.add(d);
-        System.out.println("[✓] Donasi berhasil diposting. ID: " + d.getDonationId());
+        System.out.println("\n[✓] Donasi berhasil diposting. ID: " + d.getDonationId());
     }
 
     public void cancelDonation(String donationId) {

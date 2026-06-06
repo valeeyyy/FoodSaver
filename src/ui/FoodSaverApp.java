@@ -9,8 +9,8 @@ public class FoodSaverApp {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         AppContext ctx = new AppContext();
-        ctx.startup();
         ctx.seedDummyData();
+        ctx.startup();
 
         boolean running = true;
         while (running) {

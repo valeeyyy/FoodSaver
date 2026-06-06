@@ -59,7 +59,7 @@ public class EditRequest {
                 default -> k;
             };
             String display = k.equals("password") ? "****" : e.getValue();
-            lines.add(label + ": " + display);
+            lines.add(String.format("%-16s: %s", label, display));
         }
         return lines;
     }

@@ -15,10 +15,6 @@ import util.SystemConfig;
 
 public class MatchingEngine implements Notifiable {
 
-    private static final String BOX_TOP = "┌─── DELIVERY ORDER DIBUAT " + "─".repeat(36) + "┐";
-    private static final String BOX_BOT = "└" + "─".repeat(62) + "┘";
-    private static final String ROW_FMT = "│  %-10s: %-48s│";
-
     private final DonationPool pool;
     private final ShelterRegistry registry;
     private final FoodExpiryTree expiryTree;
@@ -47,6 +43,8 @@ public class MatchingEngine implements Notifiable {
     private void runWithRadius(double radiusKm) {
         System.out.println("\n=== MATCHING ENGINE (radius=" + radiusKm + " km) ===");
 
+        boolean anyMatchFound = false;
+
         while (true) {
             List<Shelter> eligible = registry.findAllEligible();
             if (eligible.isEmpty()) {
@@ -72,10 +70,12 @@ public class MatchingEngine implements Notifiable {
             }
 
             if (options.isEmpty()) {
-                System.out.println("[✗] Tidak ada pasangan donasi-panti yang valid.");
+                if (!anyMatchFound)
+                    System.out.println("[✗] Tidak ada pasangan donasi-panti yang valid.");
                 break;
             }
 
+            anyMatchFound = true;
             MatchOption winner = scoreAndSelect(options);
             System.out.println("[✓] Match ditemukan: " + winner);
             DeliveryOrder order = createDeliveryOrder(winner);
@@ -98,16 +98,25 @@ public class MatchingEngine implements Notifiable {
 
     List<DonationBundle> generateCombinations(List<FoodDonation> donations) {
         List<DonationBundle> result = new ArrayList<>();
-        int n = Math.min(donations.size(), 6);
-        for (int mask = 1; mask < (1 << n); mask++) {
-            DonationBundle bundle = new DonationBundle();
-            for (int i = 0; i < n; i++) {
-                if ((mask & (1 << i)) != 0) {
-                    bundle.addDonation(donations.get(i));
+        result.add(new DonationBundle());
+
+        int limit = Math.min(donations.size(), 6);
+        for (int i = 0; i < limit; i++) {
+            List<DonationBundle> newBundles = new ArrayList<>();
+            for (DonationBundle bundle : result) {
+                if (bundle.getDonations().size() < 6) {
+                    DonationBundle newBundle = new DonationBundle();
+                    for (FoodDonation d : bundle.getDonations()) {
+                        newBundle.addDonation(d);
+                    }
+                    newBundle.addDonation(donations.get(i));
+                    newBundles.add(newBundle);
                 }
             }
-            result.add(bundle);
+            result.addAll(newBundles);
         }
+
+        result.removeIf(bundle -> bundle.getDonations().isEmpty());
         return result;
     }
 
@@ -189,16 +198,6 @@ public class MatchingEngine implements Notifiable {
                 SystemConfig.COURIER_ID,
                 arrivalMs,
                 Math.max(0, surplus));
-
-        System.out.println();
-        System.out.println(BOX_TOP);
-        System.out.printf(ROW_FMT + "%n", "ID Order", order.getOrderId());
-        System.out.printf(ROW_FMT + "%n", "Tujuan", winner.getShelter().getName());
-        System.out.printf(ROW_FMT + "%n", "Jarak", String.format("%.2f km", winner.getTotalRouteKm()));
-        System.out.printf(ROW_FMT + "%n", "Estimasi", String.format("%.0f menit", arrivalMs / 60000.0));
-        System.out.printf(ROW_FMT + "%n", "Surplus", Math.max(0, surplus) + " porsi");
-        System.out.printf(ROW_FMT + "%n", "Status", "WAITING_PICKUP");
-        System.out.println(BOX_BOT);
 
         return order;
     }
