@@ -26,8 +26,6 @@ public abstract class User {
         this.registeredAt = LocalDateTime.now();
     }
 
-    // Proposal §1 (User): memvalidasi kombinasi username + password dan
-    // memastikan status akun bukan REJECTED. Akun REJECTED langsung ditolak.
     public boolean login(String inputUsername, String inputPassword) {
         if (accountStatus == AccountStatus.REJECTED) {
             return false;

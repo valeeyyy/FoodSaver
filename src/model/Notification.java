@@ -3,6 +3,7 @@ package model;
 import enums.ActionType;
 import enums.AlertType;
 import util.IdGenerator;
+import util.SystemConfig;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,16 +26,20 @@ public class Notification {
 
     public static Notification createYellowAlert(String donationId) {
         return new Notification(
-                "[🟡 YELLOW ALERT] Donasi " + donationId
-                        + " hampir expired — radius matching diperluas ke 8 km.",
+                String.format(
+                        "[🟡 YELLOW ALERT] Donasi %s hampir expired — radius matching diperluas ke %.0f km.",
+                        donationId,
+                        SystemConfig.EXPANDED_RADIUS_KM),
                 AlertType.YELLOW_ALERT,
                 donationId);
     }
 
     public static Notification createRedAlert(String donationId) {
         return new Notification(
-                "[🔴 RED ALERT] Donasi " + donationId
-                        + " masuk buffer 30 menit — dikeluarkan dari antrian, status EXPIRED_UNDELIVERED.",
+                String.format(
+                        "[🔴 RED ALERT] Donasi %s masuk buffer %d menit - dikeluarkan dari antrian, status EXPIRED_UNDELIVERED.",
+                        donationId,
+                        SystemConfig.FRESHNESS_BUFFER_MIN),
                 AlertType.RED_ALERT,
                 donationId);
     }

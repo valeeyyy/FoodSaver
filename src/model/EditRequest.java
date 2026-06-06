@@ -6,7 +6,9 @@ import java.util.Map;
 
 public class EditRequest {
 
-    public enum EditStatus { PENDING, APPROVED, REJECTED }
+    public enum EditStatus {
+        PENDING, APPROVED, REJECTED
+    }
 
     private final String requestId;
     private final User requester;
@@ -24,12 +26,29 @@ public class EditRequest {
         this.requestedAt = LocalDateTime.now();
     }
 
-    public String getRequestId()       { return requestId; }
-    public User getRequester()         { return requester; }
-    public Map<String, String> getNewData() { return newData; }
-    public EditStatus getStatus()      { return status; }
-    public LocalDateTime getRequestedAt() { return requestedAt; }
-    public String getAdminNotes()      { return adminNotes; }
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public User getRequester() {
+        return requester;
+    }
+
+    public Map<String, String> getNewData() {
+        return newData;
+    }
+
+    public EditStatus getStatus() {
+        return status;
+    }
+
+    public LocalDateTime getRequestedAt() {
+        return requestedAt;
+    }
+
+    public String getAdminNotes() {
+        return adminNotes;
+    }
 
     public void approve(String notes) {
         this.status = EditStatus.APPROVED;

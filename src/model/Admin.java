@@ -52,14 +52,11 @@ public class Admin extends User {
         }
     }
 
-    // 3.2.11 — Data Structure: LinkedList digunakan agar akun pending
-    // dapat ditambahkan dengan cepat (addFirst O(1)) sehingga akun terbaru
-    // selalu tampil paling atas saat ditampilkan di dashboard.
     public LinkedList<User> viewPendingAccounts() {
         LinkedList<User> pending = new LinkedList<>();
         for (User u : userMap.values()) {
             if (u.getAccountStatus() == AccountStatus.PENDING) {
-                pending.addFirst(u); // insert di head agar terbaru di atas
+                pending.addFirst(u);
             }
         }
         return pending;
@@ -96,7 +93,7 @@ public class Admin extends User {
                     result.add(d);
             }
         }
-       
+
         for (FoodDonation d : history.getExpiredHistory()) {
             if (d.getStatus() == status)
                 result.add(d);
@@ -150,18 +147,20 @@ public class Admin extends User {
     public void viewDashboard() {
         List<FoodDonation> activeDonations = pool.getAll();
 
-        int totalActive  = activeDonations.size();
+        int totalActive = activeDonations.size();
         int waitingCount = 0;
         int matchedCount = 0;
 
         for (FoodDonation d : activeDonations) {
-            if (d.getStatus() == DonationStatus.WAITING) waitingCount++;
-            if (d.getStatus() == DonationStatus.MATCHED) matchedCount++;
+            if (d.getStatus() == DonationStatus.WAITING)
+                waitingCount++;
+            if (d.getStatus() == DonationStatus.MATCHED)
+                matchedCount++;
         }
 
         List<DeliveryOrder> allOrders = history.getAll();
 
-        int deliveredCount   = 0;
+        int deliveredCount = 0;
         int deliveredPortions = 0;
 
         for (DeliveryOrder o : allOrders) {
@@ -172,7 +171,7 @@ public class Admin extends User {
         }
 
         int expiredCount = history.getExpiredHistory().size();
-        int wastedCount  = history.getWastedHistory().size();
+        int wastedCount = history.getWastedHistory().size();
 
         LinkedList<User> pendingAccounts = viewPendingAccounts();
 
@@ -204,29 +203,44 @@ public class Admin extends User {
 
     public void applyEditRequest(User user, String decision, String notes) {
         EditRequest req = user.getPendingEditRequest();
-        if (req == null) return;
+        if (req == null)
+            return;
 
         if (decision.equalsIgnoreCase("APPROVED")) {
             req.approve(notes);
             Map<String, String> data = req.getNewData();
 
-            if (data.containsKey("phone"))   user.setPhone(data.get("phone"));
-            if (data.containsKey("address")) user.setAddress(data.get("address"));
-            if (data.containsKey("password")) user.setPassword(data.get("password"));
+            if (data.containsKey("phone"))
+                user.setPhone(data.get("phone"));
+            if (data.containsKey("address"))
+                user.setAddress(data.get("address"));
+            if (data.containsKey("password"))
+                user.setPassword(data.get("password"));
 
             if (user instanceof Restaurant r) {
-                if (data.containsKey("name"))     r.setName(data.get("name"));
-                if (data.containsKey("owner"))    r.setOwnerName(data.get("owner"));
-                if (data.containsKey("lat"))      r.setLat(Double.parseDouble(data.get("lat")));
-                if (data.containsKey("lon"))      r.setLon(Double.parseDouble(data.get("lon")));
-                if (data.containsKey("category")) r.setFoodCategory(data.get("category"));
+                if (data.containsKey("name"))
+                    r.setName(data.get("name"));
+                if (data.containsKey("owner"))
+                    r.setOwnerName(data.get("owner"));
+                if (data.containsKey("lat"))
+                    r.setLat(Double.parseDouble(data.get("lat")));
+                if (data.containsKey("lon"))
+                    r.setLon(Double.parseDouble(data.get("lon")));
+                if (data.containsKey("category"))
+                    r.setFoodCategory(data.get("category"));
             } else if (user instanceof Shelter s) {
-                if (data.containsKey("name"))      s.setName(data.get("name"));
-                if (data.containsKey("manager"))   s.setManagerName(data.get("manager"));
-                if (data.containsKey("lat"))       s.setLat(Double.parseDouble(data.get("lat")));
-                if (data.containsKey("lon"))       s.setLon(Double.parseDouble(data.get("lon")));
-                if (data.containsKey("residents")) s.setResidents(Integer.parseInt(data.get("residents")));
-                if (data.containsKey("type"))      s.setShelterType(ShelterType.valueOf(data.get("type")));
+                if (data.containsKey("name"))
+                    s.setName(data.get("name"));
+                if (data.containsKey("manager"))
+                    s.setManagerName(data.get("manager"));
+                if (data.containsKey("lat"))
+                    s.setLat(Double.parseDouble(data.get("lat")));
+                if (data.containsKey("lon"))
+                    s.setLon(Double.parseDouble(data.get("lon")));
+                if (data.containsKey("residents"))
+                    s.setResidents(Integer.parseInt(data.get("residents")));
+                if (data.containsKey("type"))
+                    s.setShelterType(ShelterType.valueOf(data.get("type")));
             }
 
             auditLog.log(username, ActionType.EDIT_APPROVED, user.getUserId(),

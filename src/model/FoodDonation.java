@@ -94,8 +94,13 @@ public class FoodDonation {
         return restaurant;
     }
 
-    public boolean isYellowAlertFired() { return yellowAlertFired; }
-    public void setYellowAlertFired(boolean v) { yellowAlertFired = v; }
+    public boolean isYellowAlertFired() {
+        return yellowAlertFired;
+    }
+
+    public void setYellowAlertFired(boolean v) {
+        yellowAlertFired = v;
+    }
 
     public void setPortions(int p) {
         this.portions = p;

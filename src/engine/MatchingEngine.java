@@ -150,16 +150,12 @@ public class MatchingEngine implements Notifiable {
     }
 
     private boolean isBetter(MatchOption a, MatchOption b) {
-        // P1: rute terpendek
         if (Math.abs(a.getTotalRouteKm() - b.getTotalRouteKm()) > SystemConfig.DOUBLE_EPSILON)
             return a.getTotalRouteKm() < b.getTotalRouteKm();
-        // P2: penghuni terbanyak
         if (a.getResidentsServed() != b.getResidentsServed())
             return a.getResidentsServed() > b.getResidentsServed();
-        // P3: paling cepat expired
         if (!a.getEarliestExpiry().equals(b.getEarliestExpiry()))
             return a.getEarliestExpiry().isBefore(b.getEarliestExpiry());
-        // P4: surplus terkecil; pengiriman penuh diutamakan atas parsial
         int sa = a.getPortionSurplus(), sb = b.getPortionSurplus();
         if (sa >= 0 && sb < 0) return true;
         if (sa < 0 && sb >= 0) return false;
