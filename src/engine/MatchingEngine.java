@@ -91,7 +91,8 @@ public class MatchingEngine implements Notifiable {
             winner.getShelter().addPortionsToday(portionsDelivered);
             onMatchFound(order);
 
-            if (pool.isEmpty()) break;
+            if (pool.isEmpty())
+                break;
         }
     }
 
@@ -114,7 +115,7 @@ public class MatchingEngine implements Notifiable {
         long arrivalMs = GeoUtils.estimateArrivalMs(bundle.getRestaurantList(), shelter);
         return filterPortions(bundle, shelter)
                 && filterDistance(bundle, shelter, radiusKm)
-                && filterFreshness(bundle, arrivalMs, shelter);
+                && filterFreshness(bundle, bundle.getRestaurantList(), shelter);
     }
 
     boolean filterPortions(DonationBundle bundle, Shelter shelter) {
@@ -131,9 +132,9 @@ public class MatchingEngine implements Notifiable {
         return true;
     }
 
-    boolean filterFreshness(DonationBundle bundle, long arrivalMs, Shelter shelter) {
+    boolean filterFreshness(DonationBundle bundle, List<Restaurant> pickups, Shelter shelter) {
         for (FoodDonation d : bundle.getDonations()) {
-            if (!GeoUtils.isSafeToDeliver(d, arrivalMs, shelter))
+            if (!GeoUtils.isSafeToDeliver(d, pickups, shelter))
                 return false;
         }
         return true;
@@ -157,8 +158,10 @@ public class MatchingEngine implements Notifiable {
         if (!a.getEarliestExpiry().equals(b.getEarliestExpiry()))
             return a.getEarliestExpiry().isBefore(b.getEarliestExpiry());
         int sa = a.getPortionSurplus(), sb = b.getPortionSurplus();
-        if (sa >= 0 && sb < 0) return true;
-        if (sa < 0 && sb >= 0) return false;
+        if (sa >= 0 && sb < 0)
+            return true;
+        if (sa < 0 && sb >= 0)
+            return false;
         return Math.abs(sa) < Math.abs(sb);
     }
 
