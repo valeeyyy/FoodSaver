@@ -43,8 +43,8 @@ public class Restaurant extends User {
     public void cancelDonation(String donationId) {
         for (FoodDonation d : donations) {
             if (d.getDonationId().equals(donationId)) {
-                if (d.getStatus() == DonationStatus.MATCHED) {
-                    System.out.println("[✗] Donasi sudah dicocokkan. Tidak dapat dibatalkan.");
+                if (d.getStatus() != DonationStatus.WAITING) {
+                    System.out.println("[✗] Hanya donasi berstatus WAITING yang dapat dibatalkan.");
                     return;
                 }
                 d.markAsCancelled();
@@ -93,10 +93,6 @@ public class Restaurant extends User {
 
     public String getFoodCategory() {
         return foodCategory;
-    }
-
-    public List<FoodDonation> getDonations() {
-        return donations;
     }
 
     public void setName(String name) {

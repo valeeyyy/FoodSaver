@@ -45,10 +45,6 @@ public class FoodSaverApp {
         String password = readNonEmpty(sc, "Password : ");
 
         User user = ctx.userMap.get(username);
-        if (user != null && user.getAccountStatus() == AccountStatus.REJECTED) {
-            System.out.println("[✗] Akun Anda telah ditolak oleh admin. Silakan hubungi admin.");
-            return;
-        }
         if (user == null || !user.login(username, password)) {
             System.out.println("[✗] Username atau password salah.");
             return;

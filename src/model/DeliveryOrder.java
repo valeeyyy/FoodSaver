@@ -76,9 +76,15 @@ public class DeliveryOrder {
 
     public void markPartialWasted(FoodDonation wastedDonation) {
         wastedDonation.markAsWasted();
-        portionSurplus = Math.max(0, portionSurplus - wastedDonation.getPortions());
+        int wasted = wastedDonation.getPortions();
+        int absorbedBySurplus = Math.min(wasted, portionSurplus);
+        int shortfall = wasted - absorbedBySurplus;
+        portionSurplus -= absorbedBySurplus;
+        if (shortfall > 0) {
+            shelter.addPortionsToday(-shortfall);
+        }
         System.out.printf("[!] Donasi %s EXPIRED saat IN_TRANSIT — ditandai WASTED, porsi dikurangi %d.%n",
-                wastedDonation.getDonationId(), wastedDonation.getPortions());
+                wastedDonation.getDonationId(), wasted);
     }
 
     private void checkBundleFreshness() {
