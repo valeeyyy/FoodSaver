@@ -62,6 +62,10 @@ public class FoodDonation {
         status = DonationStatus.DELIVERED;
     }
 
+    public void markAsCancelled() {
+        status = DonationStatus.CANCELLED;
+    }
+
     public String getDonationId() {
         return donationId;
     }

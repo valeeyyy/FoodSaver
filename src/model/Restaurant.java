@@ -47,7 +47,7 @@ public class Restaurant extends User {
                     System.out.println("[✗] Donasi sudah dicocokkan. Tidak dapat dibatalkan.");
                     return;
                 }
-                d.markAsExpired();
+                d.markAsCancelled();
                 System.out.println("[✓] Donasi " + donationId + " berhasil dibatalkan.");
                 return;
             }

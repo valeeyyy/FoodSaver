@@ -5,5 +5,6 @@ public enum DonationStatus {
     MATCHED,
     EXPIRED_UNDELIVERED,
     WASTED,
-    DELIVERED
+    DELIVERED,
+    CANCELLED
 }
