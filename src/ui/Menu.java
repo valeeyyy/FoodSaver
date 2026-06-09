@@ -653,7 +653,7 @@ public class Menu {
             String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "4", "5", "0");
             switch (ch) {
                 case "1" -> restaurantPostDonation(ctx, sc, restaurant);
-                case "2" -> restaurantViewHistory(restaurant);
+                case "2" -> restaurantViewHistory(ctx, restaurant);
                 case "3" -> restaurantEditPortions(ctx, sc, restaurant);
                 case "4" -> restaurantCancelDonation(ctx, sc, restaurant);
                 case "5" -> restaurantEditProfile(ctx, sc, restaurant);
@@ -793,16 +793,42 @@ public class Menu {
         System.out.println("  Expired   : " + donation.getExpiredAt().format(TM_FMT));
     }
 
-    private static void restaurantViewHistory(Restaurant restaurant) {
+    private static void restaurantViewHistory(AppContext ctx, Restaurant restaurant) {
         List<FoodDonation> history = restaurant.viewDonationHistory();
         if (history.isEmpty()) {
             System.out.println("[!] Belum ada riwayat donasi.");
             return;
         }
         FoodSaverApp.printHeader("RIWAYAT DONASI — " + restaurant.getName());
-        for (FoodDonation d : history)
-            System.out.printf("  %s | %-25s | %3d porsi | status: %s%n",
-                    d.getDonationId(), d.getFoodName(), d.getPortions(), d.getStatus());
+        System.out.printf("  %-16s | %-20s | %-9s | %-18s | %-6s | Catatan%n",
+                "Donasi ID", "Makanan", "Porsi", "Status", "Rating");
+        System.out.println("  " + "─".repeat(95));
+        for (FoodDonation d : history) {
+            DeliveryOrder order = findDeliveryOrderForDonation(ctx, d);
+            String rating = "—";
+            String notes = "";
+            if (order != null && order.getStatus() == OrderStatus.DELIVERED) {
+                rating = order.getRating() > 0 ? String.valueOf(order.getRating()) : "—";
+                notes = order.getReceiptNotes().isBlank() ? "(tidak ada)" : order.getReceiptNotes();
+            }
+            String foodName = d.getFoodName();
+            if (foodName.length() > 20) {
+                foodName = foodName.substring(0, 17) + "...";
+            }
+            System.out.printf("  %-16s | %-20s | %3d porsi | %-18s | %-6s | %s%n",
+                    d.getDonationId(), foodName, d.getPortions(), d.getStatus(), rating, notes);
+        }
+    }
+
+    private static DeliveryOrder findDeliveryOrderForDonation(AppContext ctx, FoodDonation donation) {
+        for (DeliveryOrder order : ctx.history.getAll()) {
+            for (FoodDonation d : order.getBundle().getDonations()) {
+                if (d.getDonationId().equals(donation.getDonationId())) {
+                    return order;
+                }
+            }
+        }
+        return null;
     }
 
     private static void restaurantEditPortions(AppContext ctx, Scanner sc, Restaurant restaurant) {
