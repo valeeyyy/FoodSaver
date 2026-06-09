@@ -46,7 +46,7 @@ public class AppContext {
         userMap.put(admin.getUsername(), admin);
     }
 
-    void seedDummyData() {
+    public void seedDummyData() {
         Restaurant[] r = {
                 new Restaurant("Warung Nasi Berkah", "Budi Santoso",
                         "warung_berkah", "berkah123",

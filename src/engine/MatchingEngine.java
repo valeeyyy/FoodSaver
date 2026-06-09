@@ -96,7 +96,7 @@ public class MatchingEngine implements Notifiable {
         }
     }
 
-    List<DonationBundle> generateCombinations(List<FoodDonation> donations) {
+    private List<DonationBundle> generateCombinations(List<FoodDonation> donations) {
         List<DonationBundle> result = new ArrayList<>();
         result.add(new DonationBundle());
 
@@ -188,7 +188,7 @@ public class MatchingEngine implements Notifiable {
         return Math.abs(sa) < Math.abs(sb);
     }
 
-    DeliveryOrder createDeliveryOrder(MatchOption winner) {
+    private DeliveryOrder createDeliveryOrder(MatchOption winner) {
         long arrivalMs = winner.getArrivalMs();
         int surplus = winner.getPortionSurplus();
 

@@ -3,6 +3,7 @@ package datastructure;
 import model.DeliveryOrder;
 import model.FoodDonation;
 import enums.OrderStatus;
+import model.Restaurant;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -57,7 +58,7 @@ public class DeliveryHistory {
     public List<DeliveryOrder> filterByRestaurant(String restaurantId) {
         List<DeliveryOrder> result = new ArrayList<>();
         for (DeliveryOrder o : history) {
-            for (model.Restaurant r : o.getBundle().getRestaurantList()) {
+            for (Restaurant r : o.getBundle().getRestaurantList()) {
                 if (r.getUserId().equals(restaurantId)) {
                     result.add(o);
                     break;

@@ -3,7 +3,6 @@ package datastructure;
 import engine.MatchingEngine;
 import model.FoodDonation;
 import model.Notification;
-import enums.ActionType;
 import enums.DonationStatus;
 import util.SystemConfig;
 
@@ -13,7 +12,6 @@ public class DonationPool {
 
     private final Queue<FoodDonation> queue;
     private final int yellowAlertMinutes;
-    private final int redAlertMinutes;
 
     private AuditLog auditLog;
     private MatchingEngine engine;
@@ -22,7 +20,6 @@ public class DonationPool {
     public DonationPool(AuditLog auditLog) {
         this.queue = new LinkedList<>();
         this.yellowAlertMinutes = SystemConfig.YELLOW_ALERT_MINUTES;
-        this.redAlertMinutes = SystemConfig.FRESHNESS_BUFFER_MIN;
         this.auditLog = auditLog;
     }
 
