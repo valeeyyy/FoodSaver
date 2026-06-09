@@ -673,9 +673,15 @@ public class Menu {
             FoodSaverApp.printDivider();
             String ch = FoodSaverApp.readMenuChoice(sc, "Pilihan: ", "1", "2", "3", "4", "5", "0");
             switch (ch) {
+<<<<<<< Updated upstream
                 case "1" -> restaurantPostDonation(ctx, sc, restaurant);
                 case "2" -> restaurantViewHistory(restaurant);
                 case "3" -> restaurantEditPortions(sc, restaurant);
+=======
+                    case "1" -> restaurantPostDonation(ctx, sc, restaurant);
+                case "2" -> restaurantViewHistory(ctx, restaurant);
+                case "3" -> restaurantEditPortions(ctx, sc, restaurant);
+>>>>>>> Stashed changes
                 case "4" -> restaurantCancelDonation(ctx, sc, restaurant);
                 case "5" -> restaurantEditProfile(ctx, sc, restaurant);
                 case "0" -> {
@@ -814,16 +820,58 @@ public class Menu {
         System.out.println("  Expired   : " + donation.getExpiredAt().format(TM_FMT));
     }
 
-    private static void restaurantViewHistory(Restaurant restaurant) {
-        List<FoodDonation> history = restaurant.viewDonationHistory();
-        if (history.isEmpty()) {
-            System.out.println("[!] Belum ada riwayat donasi.");
+    private static void restaurantViewHistory(AppContext ctx, Restaurant restaurant) {
+        List<DeliveryOrder> orders = ctx.history.filterByRestaurant(restaurant.getUserId());
+        if (orders.isEmpty()) {
+            System.out.println("[!] Belum ada riwayat pesanan yang terkait dengan donasimu.");
             return;
         }
+<<<<<<< Updated upstream
         FoodSaverApp.printHeader("RIWAYAT DONASI — " + restaurant.getName());
         for (FoodDonation d : history)
             System.out.printf("  %s | %-20s | %3d porsi | status: %s%n",
                     d.getDonationId(), d.getFoodName(), d.getPortions(), d.getStatus());
+=======
+        FoodSaverApp.printHeader("RIWAYAT DONASI & RATING — " + restaurant.getName());
+        System.out.printf("  %-16s | %-14s | %-7s | %-7s | %-6s | %-8s | %s%n",
+                "Order ID", "Status", "Diterima", "Bundle", "Rating", "Tgl", "Catatan");
+        System.out.println("  " + "─".repeat(100));
+
+        double totalRating = 0;
+        int ratedOrders = 0;
+        for (DeliveryOrder o : orders) {
+            int totalPortions = o.getBundle().getTotalPortions();
+            int surplus = o.getPortionSurplus();
+            int received = o.getPortionsReceived();
+            int rating = o.getRating();
+            String note = o.getReceiptNotes().isBlank() ? "(tidak ada)" : o.getReceiptNotes();
+
+            if (o.getStatus() == OrderStatus.DELIVERED && rating > 0) {
+                totalRating += rating;
+                ratedOrders++;
+            }
+
+            System.out.printf("  %-16s | %-14s | %3d/%-3d | %-7d | %-6s | %-8s | %s%n",
+                    o.getOrderId(),
+                    o.getStatus(),
+                    received, totalPortions,
+                    surplus,
+                    rating > 0 ? rating : "-",
+                    o.getCreatedAt().format(TM_FMT),
+                    note);
+            System.out.print("    └ Makanan: ");
+            for (FoodDonation d : o.getBundle().getDonations())
+                System.out.printf("[%s %d porsi] ", d.getFoodName(), d.getPortions());
+            System.out.println();
+        }
+
+        if (ratedOrders > 0) {
+            System.out.printf("%n  Rata-rata rating untuk restoran ini: %.2f dari %d pesanan yang dinilai.%n",
+                    totalRating / ratedOrders, ratedOrders);
+        } else {
+            System.out.println("\n  Belum ada rating dikirimkan oleh panti untuk pesanan ini.");
+        }
+>>>>>>> Stashed changes
     }
 
     private static void restaurantEditPortions(Scanner sc, Restaurant restaurant) {
